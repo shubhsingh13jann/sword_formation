@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>万剑归宗 - 赛博修仙 (Wan Jian Gui Zong)</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+        }
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #03030c;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            color: #e0f7fa;
+        }
+        #canvas-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1;
+        }
+        #title {
+            position: absolute;
+            top: 15px;
+            width: 100%;
+            text-align: center;
+            color: #00f3ff;
+            text-shadow: 0 0 15px rgba(0, 243, 255, 0.8), 0 0 30px rgba(0, 243, 255, 0.4);
+            pointer-events: none;
+            z-index: 10;
+        }
+        #title h1 {
+            margin: 0 0 4px 0;
+            font-size: 28px;
+            letter-spacing: 4px;
+            font-weight: 800;
+        }
+        #title .subtitle {
+            font-size: 13px;
+            color: #80deea;
+            letter-spacing: 2px;
+            opacity: 0.85;
+        }
+        #hud {
+            position: absolute;
+            top: 75px;
+            left: 20px;
+            color: #fff;
+            background: rgba(3, 10, 25, 0.82);
+            padding: 16px;
+            border-radius: 10px;
+            border: 1px solid rgba(0, 243, 255, 0.4);
+            box-shadow: 0 4px 25px rgba(0, 0, 0, 0.6), inset 0 0 10px rgba(0, 243, 255, 0.1);
+            backdrop-filter: blur(8px);
+            font-size: 13px;
+            line-height: 1.6;
+            z-index: 10;
+            max-width: 310px;
+        }
+        #hud h3 {
+            margin: 0 0 8px 0;
+            font-size: 14px;
+            color: #00f3ff;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 1px solid rgba(0, 243, 255, 0.3);
+            padding-bottom: 4px;
+        }
+        .gesture-item {
+            margin-bottom: 6px;
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+        }
+        .gesture-key {
+            color: #ffeb3b;
+            font-weight: bold;
+        }
+        #status-bar {
+            margin-top: 10px;
+            padding: 6px 10px;
+            background: rgba(0, 243, 255, 0.1);
+            border-radius: 6px;
+            border-left: 3px solid #00f3ff;
+            font-size: 12px;
+        }
+        #mode-badge {
+            display: inline-block;
+            margin-top: 6px;
+            padding: 3px 8px;
+            border-radius: 4px;
+            background: #00f3ff;
+            color: #03030c;
+            font-weight: bold;
+            font-size: 11px;
+            letter-spacing: 1px;
+        }
+        #formation-buttons {
+            margin-top: 12px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+        }
+        .btn-mode {
+            background: rgba(0, 243, 255, 0.15);
+            border: 1px solid rgba(0, 243, 255, 0.4);
+            color: #e0f7fa;
+            padding: 6px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 11px;
+            transition: all 0.2s;
+        }
+        .btn-mode:hover, .btn-mode.active {
+            background: #00f3ff;
+            color: #03030c;
+            font-weight: bold;
+            box-shadow: 0 0 10px rgba(0, 243, 255, 0.6);
+        }
+        #video-container {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 200px;
+            height: 150px;
+            border: 2px solid #00f3ff;
+            border-radius: 10px;
+            overflow: hidden;
+            z-index: 10;
+            background: #000;
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.3);
+        }
+        #webcam {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1);
+        }
+        #skeleton-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            transform: scaleX(-1);
+        }
+        #video-tag {
+            position: absolute;
+            top: 4px;
+            left: 6px;
+            font-size: 10px;
+            color: #00f3ff;
+            background: rgba(0,0,0,0.7);
+            padding: 2px 5px;
+            border-radius: 3px;
+            pointer-events: none;
+        }
+    </style>
+
+    <!-- Three.js Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- MediaPipe Hands & Camera Utils -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+</head>
+<body>
+    <div id="title">
+        <h1>万 剑 归 宗</h1>
+        <div class="subtitle">CYBER XIANXIA SWORD FORMATION</div>
+    </div>
+
+    <div id="hud">
+        <h3>⚔️ Sword Controls</h3>
+        <div class="gesture-item">
+            <span class="gesture-key">✋ Open Palm:</span> <span>Celestial Swarm Shield</span>
+        </div>
+        <div class="gesture-item">
+            <span class="gesture-key">✊ Clenched Fist:</span> <span>万剑归宗 Gather & Strike</span>
+        </div>
+        <div class="gesture-item">
+            <span class="gesture-key">✌️ Sword Stance:</span> <span>Piercing Drill Formation</span>
+        </div>
+        <div class="gesture-item">
+            <span class="gesture-key">👐 Dual Hands:</span> <span>Tai Chi Yin-Yang Vortex</span>
+        </div>
+        <div class="gesture-item">
+            <span class="gesture-key">🖱️ Mouse:</span> <span>Move to Aim, Click to Strike</span>
+        </div>
+
+        <div id="status-bar">
+            Status: <span id="camera-status">Initializing AI Vision...</span><br>
+            Mode: <span id="mode-badge">IDLE DRIFT</span>
+        </div>
+
+        <div id="formation-buttons">
+            <button class="btn-mode active" onclick="setManualMode('swarm')">✋ Swarm</button>
+            <button class="btn-mode" onclick="setManualMode('attack')">✊ Strike</button>
+            <button class="btn-mode" onclick="setManualMode('sword_stance')">✌️ Drill</button>
+            <button class="btn-mode" onclick="setManualMode('vortex')">👐 Vortex</button>
+            <button class="btn-mode" onclick="setManualMode('idle')" style="grid-column: span 2;">🌊 Free Idle Drift</button>
+        </div>
+    </div>
+
+    <div id="video-container">
+        <video id="webcam" autoplay playsinline muted></video>
+        <canvas id="skeleton-canvas"></canvas>
+        <div id="video-tag">AI Vision Feed</div>
+    </div>
+
+    <div id="canvas-container"></div>
+
+    <script>
+        // --- 1. Scene, Camera & WebGL Renderer Setup ---
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x03030c, 0.015);
+
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(0, 0, 38);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: 'high-performance' });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.2;
+        container.appendChild(renderer.domElement);
+
+        // --- 2. Lighting ---
+        const ambientLight = new THREE.AmbientLight(0x0a1930, 1.5);
+        scene.add(ambientLight);
+
+        const dirLight1 = new THREE.DirectionalLight(0x00f3ff, 2.0);
+        dirLight1.position.set(20, 40, 30);
+        scene.add(dirLight1);
+
+        const dirLight2 = new THREE.DirectionalLight(0xffaa00, 1.2);
+        dirLight2.position.set(-20, -30, 20);
+        scene.add(dirLight2);
+
+        // Glowing Core Orb (follows active hand / focus point)
+        const orbLight = new THREE.PointLight(0x00ffff, 4, 30, 1.5);
+        scene.add(orbLight);
+
+        const orbGeometry = new THREE.SphereGeometry(0.6, 16, 16);
+        const orbMaterial = new THREE.MeshBasicMaterial({
+            color: 0x80ffff,
+            transparent: true,
+            opacity: 0.85
+        });
+        const orbMesh = new THREE.Mesh(orbGeometry, orbMaterial);
+        scene.add(orbMesh);
+
+        // Ambient Qi Dust Particles
+        const starGeo = new THREE.BufferGeometry();
+        const starCount = 800;
+        const starPositions = new Float32Array(starCount * 3);
+        for (let i = 0; i < starCount * 3; i += 3) {
+            starPositions[i] = (Math.random() - 0.5) * 120;
+            starPositions[i + 1] = (Math.random() - 0.5) * 80;
+            starPositions[i + 2] = (Math.random() - 0.5) * 60;
+        }
+        starGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+        const starMat = new THREE.PointsMaterial({
+            color: 0x00e5ff,
+            size: 0.4,
+            transparent: true,
+            opacity: 0.5,
+            blending: THREE.AdditiveBlending
+        });
+        const stars = new THREE.Points(starGeo, starMat);
+        scene.add(stars);
+
+        // --- 3. Authentic Chinese Flying Sword Geometry (双刃飞剑) ---
+        // Aligned along +Z so lookAt() directly aims the tip forward!
+        function createSwordGeometry() {
+            const geom = new THREE.BufferGeometry();
+            const positions = [
+                // Blade Tip (Diamond Facets)
+                0, 0, 2.3,   -0.18, 0, 0.3,    0, 0.05, 0.3,
+                0, 0, 2.3,    0, 0.05, 0.3,    0.18, 0, 0.3,
+                0, 0, 2.3,    0.18, 0, 0.3,    0, -0.05, 0.3,
+                0, 0, 2.3,    0, -0.05, 0.3,  -0.18, 0, 0.3,
+
+                // Blade Mid to Base (Upper facets)
+                -0.18, 0, 0.3,  -0.18, 0, -0.5,   0, 0.06, -0.5,
+                -0.18, 0, 0.3,   0, 0.06, -0.5,   0, 0.05, 0.3,
+                0, 0.05, 0.3,    0, 0.06, -0.5,   0.18, 0, -0.5,
+                0, 0.05, 0.3,    0.18, 0, -0.5,   0.18, 0, 0.3,
+
+                // Blade Mid to Base (Lower facets)
+                0.18, 0, 0.3,    0.18, 0, -0.5,   0, -0.06, -0.5,
+                0.18, 0, 0.3,    0, -0.06, -0.5,  0, -0.05, 0.3,
+                0, -0.05, 0.3,   0, -0.06, -0.5, -0.18, 0, -0.5,
+                0, -0.05, 0.3,  -0.18, 0, -0.5,  -0.18, 0, 0.3,
+
+                // Crossguard Wings
+                -0.18, 0, -0.5,  -0.5, 0, -0.6,    0, 0.08, -0.55,
+                -0.18, 0, -0.5,   0, -0.08, -0.55, -0.5, 0, -0.6,
+                0.18, 0, -0.5,    0, 0.08, -0.55,  0.5, 0, -0.6,
+                0.18, 0, -0.5,    0.5, 0, -0.6,    0, -0.08, -0.55,
+
+                // Handle / Grip
+                -0.04, 0, -0.55,  0.04, 0, -0.55,  0.04, 0, -1.2,
+                -0.04, 0, -0.55,  0.04, 0, -1.2,  -0.04, 0, -1.2,
+                0, -0.04, -0.55,  0, 0.04, -0.55,  0, 0.04, -1.2,
+                0, -0.04, -0.55,  0, 0.04, -1.2,   0, -0.04, -1.2,
+
+                // Pommel / Jade Tassel Mount
+                -0.1, 0, -1.25,   0.1, 0, -1.25,   0, 0, -1.2,
+                -0.1, 0, -1.25,   0, 0, -1.4,      0.1, 0, -1.25,
+            ];
+
+            geom.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+            geom.computeVertexNormals();
+            return geom;
+        }
+
+        // --- 4. High-Performance Instanced Swords Setup ---
+        const SWORD_COUNT = 1500;
+        const swordGeometry = createSwordGeometry();
+        const swordMaterial = new THREE.MeshStandardMaterial({
+            color: 0x00f3ff,
+            emissive: 0x0088cc,
+            emissiveIntensity: 0.5,
+            roughness: 0.25,
+            metalness: 0.85,
+            side: THREE.DoubleSide
+        });
+
+        const instancedSwords = new THREE.InstancedMesh(swordGeometry, swordMaterial, SWORD_COUNT);
+        instancedSwords.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+        scene.add(instancedSwords);
+
+        // Assign Mystical Xianxia Sword Colors
+        const palette = [
+            new THREE.Color(0x00f7ff), // Neon Cyan Spirit Sword
+            new THREE.Color(0x0088ff), // Azure Deep Sea Sword
+            new THREE.Color(0x80ffff), // Frost Ice Sword
+            new THREE.Color(0xffd700), // Imperial Golden Sovereign Sword
+            new THREE.Color(0xaa44ff)  // Violet Lightning Sword
+        ];
+
+        for (let i = 0; i < SWORD_COUNT; i++) {
+            const rand = Math.random();
+            let color = palette[0];
+            if (rand < 0.5) color = palette[0];
+            else if (rand < 0.75) color = palette[1];
+            else if (rand < 0.85) color = palette[2];
+            else if (rand < 0.94) color = palette[3];
+            else color = palette[4];
+            instancedSwords.setColorAt(i, color);
+        }
+        instancedSwords.instanceColor.needsUpdate = true;
+
+        // Per-Sword Simulation State
+        const swordData = [];
+        for (let i = 0; i < SWORD_COUNT; i++) {
+            swordData.push({
+                pos: new THREE.Vector3(
+                    (Math.random() - 0.5) * 60,
+                    (Math.random() - 0.5) * 45,
+                    (Math.random() - 0.5) * 30
+                ),
+                vel: new THREE.Vector3(),
+                rot: new THREE.Euler(),
+                target: new THREE.Vector3(),
+                orbitRadius: 4 + Math.random() * 12,
+                orbitSpeed: 0.015 + Math.random() * 0.035,
+                orbitAngle: Math.random() * Math.PI * 2,
+                orbitElevation: (Math.random() - 0.5) * Math.PI * 0.8,
+                phase: Math.random() * Math.PI * 2,
+                scale: 0.65 + Math.random() * 0.45
+            });
+        }
+
+        const dummy = new THREE.Object3D();
+
+        // --- 5. Interaction & Gesture Control State ---
+        let currentMode = 'idle'; // 'idle', 'swarm', 'attack', 'sword_stance', 'vortex'
+        let manualOverride = false;
+        let manualTimeout = null;
+
+        const handState = {
+            active: false,
+            count: 0,
+            pos1: new THREE.Vector3(0, 0, 0),
+            pos2: new THREE.Vector3(0, 0, 0),
+            mode: 'idle'
+        };
+
+        const mouse = {
+            x: 0,
+            y: 0,
+            isDown: false
+        };
+
+        const statusEl = document.getElementById('camera-status');
+        const modeBadge = document.getElementById('mode-badge');
+
+        function updateModeBadge(mode) {
+            const labels = {
+                'idle': '🌊 IDLE DRIFT',
+                'swarm': '✋ CELESTIAL SWARM',
+                'attack': '✊ 万剑归宗 GATHER & STRIKE',
+                'sword_stance': '✌️ PIERCING DRILL',
+                'vortex': '👐 TAI CHI VORTEX'
+            };
+            modeBadge.innerText = labels[mode] || mode.toUpperCase();
+
+            // Highlight buttons
+            document.querySelectorAll('.btn-mode').forEach(btn => {
+                btn.classList.toggle('active', btn.getAttribute('onclick').includes(mode));
+            });
+        }
+
+        window.setManualMode = function(mode) {
+            manualOverride = true;
+            currentMode = mode;
+            updateModeBadge(mode);
+            clearTimeout(manualTimeout);
+            // Revert manual override after 12s if hand is tracking
+            manualTimeout = setTimeout(() => {
+                manualOverride = false;
+            }, 12000);
+        };
+
+        // --- 6. Mouse / Touch Controls Fallback ---
+        window.addEventListener('mousemove', (e) => {
+            mouse.x = (e.clientX / window.innerWidth - 0.5) * 44;
+            mouse.y = -(e.clientY / window.innerHeight - 0.5) * 30;
+            if (!handState.active && !manualOverride) {
+                if (!mouse.isDown) currentMode = 'swarm';
+            }
+        });
+
+        window.addEventListener('mousedown', (e) => {
+            if (e.target.closest('#hud') || e.target.closest('#video-container')) return;
+            mouse.isDown = true;
+            manualOverride = true;
+            currentMode = 'attack';
+            updateModeBadge('attack');
+        });
+
+        window.addEventListener('mouseup', () => {
+            if (mouse.isDown) {
+                mouse.isDown = false;
+                currentMode = handState.active ? handState.mode : 'swarm';
+                updateModeBadge(currentMode);
+                setTimeout(() => { manualOverride = false; }, 3000);
+            }
+        });
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // --- 7. MediaPipe Hands & Video Setup ---
+        const videoElement = document.getElementById('webcam');
+        const skeletonCanvas = document.getElementById('skeleton-canvas');
+        const skeletonCtx = skeletonCanvas.getContext('2d');
+
+        function resizeCanvas() {
+            skeletonCanvas.width = videoElement.clientWidth || 200;
+            skeletonCanvas.height = videoElement.clientHeight || 150;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        setTimeout(resizeCanvas, 500);
+
+        // Gesture Recognition Function
+        function classifyGesture(landmarks) {
+            const wrist = landmarks[0];
+            const tips = [8, 12, 16, 20];
+            const pips = [6, 10, 14, 18];
+            const mcps = [5, 9, 13, 17];
+
+            let curledCount = 0;
+            for (let i = 0; i < 4; i++) {
+                const dTip = Math.hypot(landmarks[tips[i]].x - wrist.x, landmarks[tips[i]].y - wrist.y);
+                const dPip = Math.hypot(landmarks[pips[i]].x - wrist.x, landmarks[pips[i]].y - wrist.y);
+                if (dTip < dPip * 1.05) curledCount++;
+            }
+
+            // Check Sword Finger (Taoist 剑指: Index + Middle extended, Ring + Pinky curled)
+            const dIndexTip = Math.hypot(landmarks[8].x - wrist.x, landmarks[8].y - wrist.y);
+            const dIndexPip = Math.hypot(landmarks[6].x - wrist.x, landmarks[6].y - wrist.y);
+            const dMiddleTip = Math.hypot(landmarks[12].x - wrist.x, landmarks[12].y - wrist.y);
+            const dMiddlePip = Math.hypot(landmarks[10].x - wrist.x, landmarks[10].y - wrist.y);
+            const dRingTip = Math.hypot(landmarks[16].x - wrist.x, landmarks[16].y - wrist.y);
+            const dRingPip = Math.hypot(landmarks[14].x - wrist.x, landmarks[14].y - wrist.y);
+            const dPinkyTip = Math.hypot(landmarks[20].x - wrist.x, landmarks[20].y - wrist.y);
+            const dPinkyPip = Math.hypot(landmarks[18].x - wrist.x, landmarks[18].y - wrist.y);
+
+            const isIndexExtended = dIndexTip > dIndexPip * 1.15;
+            const isMiddleExtended = dMiddleTip > dMiddlePip * 1.15;
+            const isRingCurled = dRingTip < dRingPip * 1.05;
+            const isPinkyCurled = dPinkyTip < dPinkyPip * 1.05;
+
+            if (isIndexExtended && isMiddleExtended && isRingCurled && isPinkyCurled) {
+                return 'sword_stance';
+            }
+
+            if (curledCount >= 3) {
+                return 'attack'; // Clenched Fist: Strike
+            }
+
+            return 'swarm'; // Open Palm: Swarm
+        }
+
+        // Draw Skeleton feedback on small video PIP
+        function drawHandFeedback(multiLandmarks) {
+            skeletonCtx.clearRect(0, 0, skeletonCanvas.width, skeletonCanvas.height);
+            if (!multiLandmarks || multiLandmarks.length === 0) return;
+
+            const w = skeletonCanvas.width;
+            const h = skeletonCanvas.height;
+
+            skeletonCtx.lineWidth = 2;
+            skeletonCtx.strokeStyle = '#00f3ff';
+            skeletonCtx.fillStyle = '#ffeb3b';
+
+            multiLandmarks.forEach(landmarks => {
+                landmarks.forEach(pt => {
+                    skeletonCtx.beginPath();
+                    skeletonCtx.arc(pt.x * w, pt.y * h, 3, 0, 2 * Math.PI);
+                    skeletonCtx.fill();
+                });
+            });
+        }
+
+        let hands = null;
+        let cameraUtils = null;
+
+        try {
+            hands = new Hands({
+                locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+            });
+
+            hands.setOptions({
+                maxNumHands: 2,
+                modelComplexity: 1,
+                minDetectionConfidence: 0.55,
+                minTrackingConfidence: 0.5
+            });
+
+            hands.onResults((results) => {
+                drawHandFeedback(results.multiHandLandmarks);
+
+                if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+                    handState.active = true;
+                    handState.count = results.multiHandLandmarks.length;
+
+                    // Hand 1 (Mirrored mapping to 3D space)
+                    const lm1 = results.multiHandLandmarks[0];
+                    const palm1 = lm1[9];
+                    handState.pos1.set((0.5 - palm1.x) * 44, -(palm1.y - 0.5) * 30, 0);
+
+                    if (handState.count >= 2) {
+                        const lm2 = results.multiHandLandmarks[1];
+                        const palm2 = lm2[9];
+                        handState.pos2.set((0.5 - palm2.x) * 44, -(palm2.y - 0.5) * 30, 0);
+                        handState.mode = 'vortex';
+                    } else {
+                        handState.mode = classifyGesture(lm1);
+                    }
+
+                    if (!manualOverride) {
+                        currentMode = handState.mode;
+                        updateModeBadge(currentMode);
+                    }
+                    statusEl.innerText = `AI Vision: Hand Tracked (${handState.mode.toUpperCase()})`;
+                } else {
+                    handState.active = false;
+                    if (!manualOverride && !mouse.isDown) {
+                        statusEl.innerText = "AI Vision: Tracking... (Using Mouse)";
+                    }
+                }
+            });
+
+            // Start webcam
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                cameraUtils = new Camera(videoElement, {
+                    onFrame: async () => {
+                        await hands.send({ image: videoElement });
+                    },
+                    width: 320,
+                    height: 240
+                });
+
+                cameraUtils.start().then(() => {
+                    statusEl.innerText = "AI Vision Online (Show Hand)";
+                }).catch((err) => {
+                    console.warn("Camera access denied or unavailable:", err);
+                    statusEl.innerText = "Webcam denied - Using Mouse/Click Mode";
+                });
+            } else {
+                statusEl.innerText = "Webcam not supported - Using Mouse Mode";
+            }
+        } catch (e) {
+            console.error("MediaPipe initialization error:", e);
+            statusEl.innerText = "Vision AI fallback - Using Mouse Mode";
+        }
+
+        // --- 8. Animation & Formation Physics Loop ---
+        let clock = new THREE.Clock();
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            const time = Date.now() * 0.001;
+            const delta = clock.getDelta();
+
+            // Determine Target Focus Point
+            let focalPoint = new THREE.Vector3();
+            if (handState.active) {
+                focalPoint.copy(handState.pos1);
+            } else {
+                focalPoint.set(mouse.x, mouse.y, 0);
+            }
+
+            // Update Glowing Qi Orb
+            orbMesh.position.lerp(focalPoint, 0.12);
+            orbLight.position.copy(orbMesh.position);
+            orbLight.intensity = (currentMode === 'attack' ? 7 : 4) + Math.sin(time * 6) * 1.5;
+            orbMesh.scale.setScalar(1 + Math.sin(time * 5) * 0.2);
+
+            // Subtle background dust movement
+            stars.rotation.y = time * 0.015;
+            stars.rotation.x = Math.sin(time * 0.01) * 0.05;
+
+            // Update Every Flying Sword in Formation
+            for (let i = 0; i < SWORD_COUNT; i++) {
+                const s = swordData[i];
+                const pos = s.pos;
+                const target = s.target;
+
+                if (currentMode === 'attack') {
+                    // === 万剑归宗: Arrowhead / Spear Laser Barrage ===
+                    // Concentric rings forming an immense piercing cone aimed forward
+                    const ringIndex = i % 18;
+                    const ringRadius = 0.5 + ringIndex * 0.38;
+                    const ringAngle = (i / 18) * 0.8 + time * 3;
+                    const zOffset = (ringIndex * 1.8) - 15;
+
+                    target.x = focalPoint.x + Math.cos(ringAngle) * ringRadius;
+                    target.y = focalPoint.y + Math.sin(ringAngle) * ringRadius;
+                    target.z = focalPoint.z + zOffset;
+
+                    // High velocity thrust with sword hum vibration
+                    pos.x += (target.x - pos.x) * 0.15;
+                    pos.y += (target.y - pos.y) * 0.15;
+                    pos.z += (target.z - pos.z) * 0.18;
+
+                    // Point directly towards target focus
+                    dummy.position.copy(pos);
+                    dummy.lookAt(focalPoint.x, focalPoint.y, focalPoint.z + 25);
+
+                } else if (currentMode === 'sword_stance') {
+                    // === 剑指: Tight High-Speed Piercing Drill Helix ===
+                    const drillRadius = 1.2 + (i % 8) * 0.35;
+                    const drillAngle = time * 12 + i * 0.12;
+                    const drillDepth = -20 + (i / SWORD_COUNT) * 45;
+
+                    target.x = focalPoint.x + Math.cos(drillAngle) * drillRadius;
+                    target.y = focalPoint.y + Math.sin(drillAngle) * drillRadius;
+                    target.z = drillDepth;
+
+                    pos.x += (target.x - pos.x) * 0.2;
+                    pos.y += (target.y - pos.y) * 0.2;
+                    pos.z += (target.z - pos.z) * 0.2;
+
+                    dummy.position.copy(pos);
+                    dummy.lookAt(focalPoint.x, focalPoint.y, 40);
+
+                } else if (currentMode === 'vortex') {
+                    // === 两仪剑阵: Dual Hands Yin-Yang Tai Chi Vortex ===
+                    const isHandOne = (i % 2 === 0);
+                    const center = (handState.count >= 2)
+                        ? (isHandOne ? handState.pos1 : handState.pos2)
+                        : focalPoint;
+
+                    const angle = time * (isHandOne ? 2.5 : -2.5) + (i * 0.03);
+                    const radius = 3.5 + (i % 16) * 0.7;
+
+                    target.x = center.x + Math.cos(angle) * radius;
+                    target.y = center.y + Math.sin(angle) * radius;
+                    target.z = center.z + Math.sin(time * 3 + i) * 3;
+
+                    pos.x += (target.x - pos.x) * 0.09;
+                    pos.y += (target.y - pos.y) * 0.09;
+                    pos.z += (target.z - pos.z) * 0.09;
+
+                    dummy.position.copy(pos);
+                    // Look along tangent for swirling blade ring
+                    dummy.lookAt(
+                        pos.x - Math.sin(angle) * 10,
+                        pos.y + Math.cos(angle) * 10,
+                        pos.z
+                    );
+
+                } else if (currentMode === 'swarm') {
+                    // === 天罡剑阵: Protective Celestial Swarm Spherical Orbit ===
+                    const theta = s.orbitAngle + time * s.orbitSpeed * 3;
+                    const phi = s.orbitElevation + Math.sin(time + s.phase) * 0.3;
+                    const r = s.orbitRadius;
+
+                    target.x = focalPoint.x + r * Math.sin(phi) * Math.cos(theta);
+                    target.y = focalPoint.y + r * Math.sin(phi) * Math.sin(theta);
+                    target.z = focalPoint.z + r * Math.cos(phi);
+
+                    pos.x += (target.x - pos.x) * 0.07;
+                    pos.y += (target.y - pos.y) * 0.07;
+                    pos.z += (target.z - pos.z) * 0.07;
+
+                    dummy.position.copy(pos);
+                    // Swirl around perimeter
+                    dummy.lookAt(
+                        pos.x - Math.sin(theta) * 5,
+                        pos.y + Math.cos(theta) * 5,
+                        pos.z + Math.cos(phi) * 5
+                    );
+
+                } else {
+                    // === 游剑海: Majestic Cosmic Idle Wave Array ===
+                    const col = i % 40;
+                    const row = Math.floor(i / 40);
+                    const waveX = (col - 20) * 1.5;
+                    const waveY = (row - 18) * 1.2;
+                    const waveZ = Math.sin(time * 1.5 + col * 0.25 + row * 0.15) * 6;
+
+                    target.x = waveX + Math.sin(time + row) * 2;
+                    target.y = waveY + Math.cos(time + col) * 1.5;
+                    target.z = waveZ;
+
+                    pos.x += (target.x - pos.x) * 0.04;
+                    pos.y += (target.y - pos.y) * 0.04;
+                    pos.z += (target.z - pos.z) * 0.04;
+
+                    dummy.position.copy(pos);
+                    dummy.lookAt(pos.x, pos.y + 1, pos.z + 5);
+                }
+
+                dummy.scale.setScalar(s.scale);
+                dummy.updateMatrix();
+                instancedSwords.setMatrixAt(i, dummy.matrix);
+            }
+
+            instancedSwords.instanceMatrix.needsUpdate = true;
+            renderer.render(scene, camera);
+        }
+
+        // Always run the animation loop regardless of camera status
+        animate();
+    </script>
+</body>
+</html>
