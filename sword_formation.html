@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CYBER-KINETIC SWORD FORMATION | Autonomous Blade Array</title>
+    <title>VALYRIAN KINETIC SWORD FORMATION | Mastercraft Blade Array</title>
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -11,15 +11,14 @@
 
     <style>
         :root {
-            --primary: #00f3ff;
-            --primary-glow: rgba(0, 243, 255, 0.45);
+            --primary: #06b6d4;
+            --primary-glow: rgba(6, 182, 212, 0.45);
             --bg-dark: #03050c;
-            --panel-bg: rgba(6, 11, 25, 0.88);
-            --panel-border: rgba(0, 243, 255, 0.35);
-            --accent-gold: #ffd700;
-            --accent-crimson: #ff0055;
-            --accent-violet: #bc13fe;
-            --text-main: #e0f7fa;
+            --panel-bg: rgba(8, 14, 28, 0.88);
+            --panel-border: rgba(6, 182, 212, 0.3);
+            --accent-gold: #f59e0b;
+            --accent-crimson: #e11d48;
+            --text-main: #e2e8f0;
             --font-display: 'Rajdhani', sans-serif;
             --font-mono: 'JetBrains Mono', monospace;
         }
@@ -49,7 +48,7 @@
             z-index: 1;
         }
 
-        /* --- Scanlines & Vignette Overlay --- */
+        /* --- Scanlines & Vignette --- */
         .cyber-overlay {
             position: absolute;
             top: 0;
@@ -58,7 +57,7 @@
             height: 100%;
             pointer-events: none;
             z-index: 5;
-            background: radial-gradient(circle at center, transparent 55%, rgba(1, 4, 12, 0.75) 100%);
+            background: radial-gradient(circle at center, transparent 55%, rgba(1, 3, 10, 0.85) 100%);
         }
 
         .cyber-scanlines {
@@ -69,12 +68,12 @@
             height: 100%;
             pointer-events: none;
             z-index: 6;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.22) 50%);
             background-size: 100% 4px;
-            opacity: 0.4;
+            opacity: 0.35;
         }
 
-        /* --- Header / Top Telemetry --- */
+        /* --- Top Telemetry Bar --- */
         #top-bar {
             position: absolute;
             top: 0;
@@ -85,8 +84,8 @@
             justify-content: space-between;
             align-items: center;
             z-index: 10;
-            background: linear-gradient(180deg, rgba(3, 7, 18, 0.9) 0%, rgba(3, 7, 18, 0) 100%);
-            border-bottom: 1px solid rgba(0, 243, 255, 0.15);
+            background: linear-gradient(180deg, rgba(2, 6, 16, 0.95) 0%, rgba(2, 6, 16, 0) 100%);
+            border-bottom: 1px solid rgba(6, 182, 212, 0.18);
         }
 
         .brand-title {
@@ -96,14 +95,14 @@
         }
 
         .brand-icon {
-            width: 28px;
-            height: 28px;
-            border: 2px solid var(--primary);
+            width: 26px;
+            height: 26px;
+            border: 2px solid var(--accent-gold);
             transform: rotate(45deg);
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 0 12px var(--primary-glow);
+            box-shadow: 0 0 12px rgba(245, 158, 11, 0.4);
         }
 
         .brand-icon::after {
@@ -114,7 +113,7 @@
         }
 
         .brand-text h1 {
-            font-size: 22px;
+            font-size: 20px;
             font-weight: 700;
             letter-spacing: 3px;
             color: #fff;
@@ -124,21 +123,21 @@
         .brand-text .subtext {
             font-size: 11px;
             font-family: var(--font-mono);
-            color: var(--primary);
+            color: var(--accent-gold);
             letter-spacing: 2px;
-            opacity: 0.85;
+            opacity: 0.9;
         }
 
         .telemetry-bar {
             display: flex;
-            gap: 20px;
+            gap: 14px;
             font-family: var(--font-mono);
             font-size: 12px;
         }
 
         .telemetry-item {
-            background: rgba(0, 243, 255, 0.05);
-            border: 1px solid rgba(0, 243, 255, 0.2);
+            background: rgba(6, 182, 212, 0.06);
+            border: 1px solid rgba(6, 182, 212, 0.22);
             padding: 5px 12px;
             border-radius: 4px;
             display: flex;
@@ -155,16 +154,16 @@
             font-weight: bold;
         }
 
-        /* --- Left Tactical Control Panel --- */
+        /* --- Left Tactical HUD Panel --- */
         #tactical-panel {
             position: absolute;
-            top: 85px;
+            top: 80px;
             left: 28px;
-            width: 320px;
+            width: 325px;
             background: var(--panel-bg);
             border: 1px solid var(--panel-border);
             border-radius: 8px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.75), inset 0 0 15px rgba(0, 243, 255, 0.06);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8), inset 0 0 15px rgba(6, 182, 212, 0.08);
             backdrop-filter: blur(12px);
             padding: 18px;
             z-index: 10;
@@ -174,23 +173,23 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid rgba(0, 243, 255, 0.2);
+            border-bottom: 1px solid rgba(6, 182, 212, 0.22);
             padding-bottom: 8px;
             margin-bottom: 14px;
         }
 
         .panel-header h2 {
-            font-size: 14px;
+            font-size: 13px;
             letter-spacing: 1.5px;
-            color: var(--primary);
+            color: var(--accent-gold);
             text-transform: uppercase;
         }
 
         .panel-badge {
             font-family: var(--font-mono);
             font-size: 10px;
-            background: rgba(0, 243, 255, 0.15);
-            color: var(--primary);
+            background: rgba(245, 158, 11, 0.16);
+            color: var(--accent-gold);
             padding: 2px 6px;
             border-radius: 3px;
         }
@@ -207,8 +206,8 @@
         .gesture-guide {
             display: flex;
             flex-direction: column;
-            gap: 6px;
-            margin-bottom: 14px;
+            gap: 5px;
+            margin-bottom: 12px;
         }
 
         .guide-row {
@@ -217,7 +216,7 @@
             justify-content: space-between;
             background: rgba(255, 255, 255, 0.03);
             border: 1px solid rgba(255, 255, 255, 0.06);
-            padding: 6px 10px;
+            padding: 5px 10px;
             border-radius: 4px;
             font-size: 12px;
         }
@@ -236,7 +235,7 @@
             color: var(--primary);
         }
 
-        /* --- Formation Selector Buttons --- */
+        /* --- Formation Buttons --- */
         .formation-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -245,24 +244,22 @@
         }
 
         .btn-formation {
-            background: rgba(0, 243, 255, 0.08);
-            border: 1px solid rgba(0, 243, 255, 0.25);
+            background: rgba(6, 182, 212, 0.08);
+            border: 1px solid rgba(6, 182, 212, 0.25);
             color: var(--text-main);
             font-family: var(--font-display);
             font-size: 12px;
             font-weight: 600;
             letter-spacing: 1px;
-            padding: 8px 10px;
+            padding: 7px 10px;
             border-radius: 4px;
             cursor: pointer;
             transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
             text-align: left;
-            position: relative;
-            overflow: hidden;
         }
 
         .btn-formation:hover {
-            background: rgba(0, 243, 255, 0.22);
+            background: rgba(6, 182, 212, 0.22);
             border-color: var(--primary);
             box-shadow: 0 0 10px var(--primary-glow);
             transform: translateY(-1px);
@@ -270,36 +267,42 @@
 
         .btn-formation.active {
             background: var(--primary);
-            color: #030612;
+            color: #020612;
             border-color: #fff;
             font-weight: 700;
             box-shadow: 0 0 16px var(--primary-glow);
         }
 
-        /* --- Plasma Color Selector --- */
-        .color-selector {
+        /* --- Steel Finish Selector --- */
+        .material-selector {
             display: flex;
-            gap: 8px;
-            margin-top: 8px;
+            gap: 6px;
+            margin-top: 6px;
         }
 
-        .color-pill {
+        .btn-mat {
             flex: 1;
-            height: 22px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #fff;
+            font-family: var(--font-mono);
+            font-size: 10px;
+            padding: 6px 0;
             border-radius: 3px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
             cursor: pointer;
+            text-align: center;
             transition: all 0.2s;
-            position: relative;
         }
 
-        .color-pill.active {
-            border-color: #fff;
-            transform: scale(1.08);
-            box-shadow: 0 0 10px currentColor;
+        .btn-mat.active {
+            background: rgba(6, 182, 212, 0.25);
+            border-color: var(--primary);
+            color: var(--primary);
+            font-weight: bold;
+            box-shadow: 0 0 10px var(--primary-glow);
         }
 
-        /* --- Video & PIP Container --- */
+        /* --- Vision PIP --- */
         #vision-pip {
             position: absolute;
             bottom: 24px;
@@ -320,8 +323,8 @@
             left: 0;
             width: 100%;
             padding: 5px 8px;
-            background: rgba(3, 7, 18, 0.85);
-            border-bottom: 1px solid rgba(0, 243, 255, 0.2);
+            background: rgba(2, 6, 16, 0.88);
+            border-bottom: 1px solid rgba(6, 182, 212, 0.2);
             font-family: var(--font-mono);
             font-size: 10px;
             color: var(--primary);
@@ -364,15 +367,15 @@
             z-index: 1;
         }
 
-        /* --- Target Crosshair Reticle --- */
+        /* --- Reticle Crosshair --- */
         #hud-reticle {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 48px;
-            height: 48px;
-            border: 1px dashed rgba(0, 243, 255, 0.4);
+            width: 44px;
+            height: 44px;
+            border: 1px dashed rgba(6, 182, 212, 0.4);
             border-radius: 50%;
             pointer-events: none;
             z-index: 8;
@@ -388,7 +391,7 @@
         #hud-reticle::before {
             top: 50%;
             left: -8px;
-            width: 64px;
+            width: 60px;
             height: 1px;
             transform: translateY(-50%);
         }
@@ -396,7 +399,7 @@
         #hud-reticle::after {
             left: 50%;
             top: -8px;
-            height: 64px;
+            height: 60px;
             width: 1px;
             transform: translateX(-50%);
         }
@@ -405,7 +408,7 @@
     <!-- Core Three.js (r128) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
-    <!-- Three.js Postprocessing Pipeline (Unreal Bloom Pass) -->
+    <!-- Three.js Postprocessing Pipeline -->
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
@@ -423,15 +426,15 @@
         <div class="brand-title">
             <div class="brand-icon"></div>
             <div class="brand-text">
-                <h1>CYBER-KINETIC SWORD FORMATION</h1>
-                <div class="subtext">AUTONOMOUS QUANTUM ENERGY BLADE ARRAY</div>
+                <h1>VALYRIAN KINETIC SWORD FORMATION</h1>
+                <div class="subtext">MASTERCRAFT FORGED BLADE ARRAY</div>
             </div>
         </div>
 
         <div class="telemetry-bar">
             <div class="telemetry-item">
                 <span class="telemetry-label">BLADES:</span>
-                <span class="telemetry-val" id="tele-blades">1,200</span>
+                <span class="telemetry-val" id="tele-blades">180</span>
             </div>
             <div class="telemetry-item">
                 <span class="telemetry-label">FPS:</span>
@@ -488,12 +491,12 @@
             <button class="btn-formation" onclick="setStance('drift')" style="grid-column: span 2;">05 // HARMONIC DRIFT</button>
         </div>
 
-        <div class="section-title">Plasma Frequency Tuning</div>
-        <div class="color-selector">
-            <div class="color-pill active" style="background: #00f3ff; color: #00f3ff;" onclick="setPlasmaColor('cyan', this)" title="Cyan Ion"></div>
-            <div class="color-pill" style="background: #bc13fe; color: #bc13fe;" onclick="setPlasmaColor('violet', this)" title="Void Violet"></div>
-            <div class="color-pill" style="background: #ffd700; color: #ffd700;" onclick="setPlasmaColor('gold', this)" title="Solar Gold"></div>
-            <div class="color-pill" style="background: #ff0055; color: #ff0055;" onclick="setPlasmaColor('crimson', this)" title="Hyper Crimson"></div>
+        <div class="section-title">Steel Finish</div>
+        <div class="material-selector">
+            <button class="btn-mat active" onclick="setSteelFinish('damascus', this)">Damascus</button>
+            <button class="btn-mat" onclick="setSteelFinish('obsidian', this)">Obsidian</button>
+            <button class="btn-mat" onclick="setSteelFinish('gold', this)">Gilded Gold</button>
+            <button class="btn-mat" onclick="setSteelFinish('plasma', this)">Cyan Plasma</button>
         </div>
     </div>
 
@@ -507,7 +510,7 @@
         <canvas id="skeleton-canvas"></canvas>
     </div>
 
-    <!-- Reticle & Scanline Overlays -->
+    <!-- Reticle & Scanlines -->
     <div id="hud-reticle"></div>
     <div class="cyber-overlay"></div>
     <div class="cyber-scanlines"></div>
@@ -516,200 +519,241 @@
 
     <script>
         // =====================================================================
-        // 1. SCENE, CAMERA & POST-PROCESSING PIPELINE
+        // 1. SCENE, CAMERA & POST-PROCESSING
         // =====================================================================
         const container = document.getElementById('canvas-container');
         const scene = new THREE.Scene();
-        scene.fog = new THREE.FogExp2(0x02040a, 0.016);
+        scene.fog = new THREE.FogExp2(0x03050c, 0.015);
 
-        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const camera = new THREE.PerspectiveCamera(54, window.innerWidth / window.innerHeight, 0.1, 1000);
         camera.position.set(0, 0, 42);
 
         const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
-        renderer.toneMappingExposure = 1.15;
+        renderer.toneMappingExposure = 1.25;
         container.appendChild(renderer.domElement);
 
-        // Unreal Bloom Post-Processing
         let composer = null;
         try {
             const renderScene = new THREE.RenderPass(scene, camera);
             const bloomPass = new THREE.UnrealBloomPass(
                 new THREE.Vector2(window.innerWidth, window.innerHeight),
-                1.35, // Strength
-                0.35, // Radius
-                0.68  // Threshold: Only radiant plasma & emissive cores glow intensely
+                1.0,  // Bloom Strength
+                0.3,  // Bloom Radius
+                0.72  // Bloom Threshold
             );
             composer = new THREE.EffectComposer(renderer);
             composer.addPass(renderScene);
             composer.addPass(bloomPass);
         } catch (e) {
-            console.warn("UnrealBloomPass failed to load; using direct renderer:", e);
+            console.warn("EffectComposer fallback:", e);
         }
 
         // =====================================================================
-        // 2. LIGHTING & ENVIRONMENT
+        // 2. LIGHTING (STUDIO SPECULAR HIGHLIGHTS)
         // =====================================================================
-        const ambientLight = new THREE.AmbientLight(0x0a1628, 1.8);
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.95);
         scene.add(ambientLight);
 
-        const keyLight = new THREE.DirectionalLight(0x00f3ff, 2.2);
-        keyLight.position.set(30, 50, 40);
-        scene.add(keyLight);
+        const dirLight = new THREE.DirectionalLight(0xffffff, 2.5);
+        dirLight.position.set(5, 10, 7);
+        scene.add(dirLight);
 
-        const rimLight = new THREE.DirectionalLight(0xff6600, 1.4);
-        rimLight.position.set(-30, -40, 20);
-        scene.add(rimLight);
+        const pointLight1 = new THREE.PointLight(0x06b6d4, 3.5, 35);
+        pointLight1.position.set(-8, 5, 12);
+        scene.add(pointLight1);
 
-        // Dynamic Focal Point Plasma Beacon
-        const beaconLight = new THREE.PointLight(0x00f3ff, 5.0, 35, 1.8);
+        const pointLight2 = new THREE.PointLight(0xf59e0b, 3.0, 35);
+        pointLight2.position.set(8, -5, 12);
+        scene.add(pointLight2);
+
+        // Focal Beacon
+        const beaconLight = new THREE.PointLight(0x06b6d4, 5.0, 35, 1.8);
         scene.add(beaconLight);
 
         const beaconMesh = new THREE.Mesh(
-            new THREE.SphereGeometry(0.7, 24, 24),
-            new THREE.MeshBasicMaterial({ color: 0xe0ffff, transparent: true, opacity: 0.9 })
+            new THREE.SphereGeometry(0.8, 24, 24),
+            new THREE.MeshBasicMaterial({ color: 0xdffaff, transparent: true, opacity: 0.9 })
         );
         scene.add(beaconMesh);
 
-        // Ambient Quantum Dust Field
-        const dustCount = 600;
-        const dustGeo = new THREE.BufferGeometry();
-        const dustPos = new Float32Array(dustCount * 3);
-        for (let i = 0; i < dustCount * 3; i += 3) {
-            dustPos[i] = (Math.random() - 0.5) * 140;
-            dustPos[i + 1] = (Math.random() - 0.5) * 100;
-            dustPos[i + 2] = (Math.random() - 0.5) * 70;
+        // Ambient Embers
+        const emberCount = 200;
+        const emberGeo = new THREE.BufferGeometry();
+        const emberPos = new Float32Array(emberCount * 3);
+        for (let i = 0; i < emberCount * 3; i += 3) {
+            emberPos[i] = (Math.random() - 0.5) * 140;
+            emberPos[i + 1] = (Math.random() - 0.5) * 100;
+            emberPos[i + 2] = (Math.random() - 0.5) * 70;
         }
-        dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPos, 3));
-        const dustMat = new THREE.PointsMaterial({
-            color: 0x00f3ff,
+        emberGeo.setAttribute('position', new THREE.BufferAttribute(emberPos, 3));
+        const emberMat = new THREE.PointsMaterial({
+            color: 0x06b6d4,
             size: 0.45,
             transparent: true,
-            opacity: 0.45,
+            opacity: 0.5,
             blending: THREE.AdditiveBlending
         });
-        const dustParticles = new THREE.Points(dustGeo, dustMat);
-        scene.add(dustParticles);
+        const embers = new THREE.Points(emberGeo, emberMat);
+        scene.add(embers);
 
         // =====================================================================
-        // 3. DUAL-LAYER CYBER KATANA (PLASMA KINETIC BLADE)
+        // 3. VALYRIAN SWORD SHARED GEOMETRIES & MATERIALS
         // =====================================================================
-        // Layer 1: Dark Titanium/Carbon Core Spine & Hilt
-        function createBladeCoreGeometry() {
-            const geom = new THREE.BufferGeometry();
-            const vertices = [
-                // Blade Central Titanium Spine (Diamond wedge)
-                0, 0, 2.5,   -0.12, 0, 0.4,    0, 0.07, 0.4,
-                0, 0, 2.5,    0, 0.07, 0.4,    0.12, 0, 0.4,
-                0, 0, 2.5,    0.12, 0, 0.4,    0, -0.07, 0.4,
-                0, 0, 2.5,    0, -0.07, 0.4,  -0.12, 0, 0.4,
-
-                // Mid to Base Spine
-                -0.12, 0, 0.4,  -0.14, 0, -0.4,   0, 0.08, -0.4,
-                -0.12, 0, 0.4,   0, 0.08, -0.4,   0, 0.07, 0.4,
-                0, 0.07, 0.4,    0, 0.08, -0.4,   0.14, 0, -0.4,
-                0, 0.07, 0.4,    0.14, 0, -0.4,   0.12, 0, 0.4,
-                0.12, 0, 0.4,    0.14, 0, -0.4,   0, -0.08, -0.4,
-                0.12, 0, 0.4,    0, -0.08, -0.4,  0, -0.07, 0.4,
-                0, -0.07, 0.4,   0, -0.08, -0.4, -0.14, 0, -0.4,
-                0, -0.07, 0.4,  -0.14, 0, -0.4,  -0.12, 0, 0.4,
-
-                // Kinetic Crossguard Wings
-                -0.14, 0, -0.4,  -0.52, 0, -0.52,   0, 0.10, -0.46,
-                -0.14, 0, -0.4,   0, -0.10, -0.46, -0.52, 0, -0.52,
-                0.14, 0, -0.4,    0, 0.10, -0.46,   0.52, 0, -0.52,
-                0.14, 0, -0.4,    0.52, 0, -0.52,   0, -0.10, -0.46,
-
-                // Carbon-Fiber Grip Hilt
-                -0.05, 0, -0.46,  0.05, 0, -0.46,  0.05, 0, -1.15,
-                -0.05, 0, -0.46,  0.05, 0, -1.15, -0.05, 0, -1.15,
-                0, -0.05, -0.46,  0, 0.05, -0.46,  0, 0.05, -1.15,
-                0, -0.05, -0.46,  0, 0.05, -1.15,  0, -0.05, -1.15,
-
-                // Angular Counterweight Pommel
-                -0.11, 0, -1.2,   0.11, 0, -1.2,   0, 0, -1.15,
-                -0.11, 0, -1.2,   0, 0, -1.35,     0.11, 0, -1.2
-            ];
-            geom.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-            geom.computeVertexNormals();
-            return geom;
-        }
-
-        // Layer 2: Radiant High-Voltage Plasma Laser Cutting Edges
-        function createBladePlasmaGeometry() {
-            const geom = new THREE.BufferGeometry();
-            const vertices = [
-                // Razor-sharp Outer Cutting Edges (Upper + Lower)
-                0, 0, 2.65,    -0.22, 0, 0.35,   -0.12, 0, 0.4,
-                0, 0, 2.65,     0.12, 0, 0.4,     0.22, 0, 0.35,
-
-                -0.22, 0, 0.35, -0.24, 0, -0.42,  -0.14, 0, -0.4,
-                -0.22, 0, 0.35, -0.14, 0, -0.4,   -0.12, 0, 0.4,
-
-                0.22, 0, 0.35,   0.14, 0, -0.4,    0.24, 0, -0.42,
-                0.22, 0, 0.35,   0.12, 0, 0.4,     0.14, 0, -0.4,
-
-                // Crossguard Rear Thruster Exhaust Emitters
-                -0.52, 0, -0.52, -0.46, 0, -0.66,   0, 0.02, -0.46,
-                0.52, 0, -0.52,   0, 0.02, -0.46,   0.46, 0, -0.66
-            ];
-            geom.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-            geom.computeVertexNormals();
-            return geom;
-        }
-
-        const BLADE_COUNT = 1200;
-
-        // Physical Core Material: Matte Dark Titanium Alloy
-        const coreMaterial = new THREE.MeshStandardMaterial({
-            color: 0x0b1118,
+        const steelMaterial = new THREE.MeshStandardMaterial({
+            color: 0xe2e8f0,
             metalness: 0.95,
-            roughness: 0.18,
-            side: THREE.DoubleSide
+            roughness: 0.15
         });
 
-        // Plasma Edge Material: High-Intensity Laser (Blooms brilliantly)
-        let plasmaColorHex = 0x00f3ff;
-        const plasmaMaterial = new THREE.MeshBasicMaterial({
-            color: plasmaColorHex,
-            side: THREE.DoubleSide
+        const fullerMaterial = new THREE.MeshStandardMaterial({
+            color: 0x475569,
+            metalness: 0.9,
+            roughness: 0.4
         });
 
-        const coreMesh = new THREE.InstancedMesh(createBladeCoreGeometry(), coreMaterial, BLADE_COUNT);
-        const plasmaMesh = new THREE.InstancedMesh(createBladePlasmaGeometry(), plasmaMaterial, BLADE_COUNT);
+        const goldMaterial = new THREE.MeshStandardMaterial({
+            color: 0xf59e0b,
+            metalness: 0.9,
+            roughness: 0.25
+        });
 
-        coreMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-        plasmaMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+        const leatherMaterial = new THREE.MeshStandardMaterial({
+            color: 0x271910,
+            metalness: 0.1,
+            roughness: 0.85
+        });
 
-        scene.add(coreMesh);
-        scene.add(plasmaMesh);
+        const rubyMaterial = new THREE.MeshPhysicalMaterial({
+            color: 0xd97706,
+            emissive: 0xd97706,
+            emissiveIntensity: 0.4,
+            roughness: 0.1,
+            transmission: 0.6,
+            thickness: 0.5
+        });
 
-        // Simulation State per Blade
-        const blades = [];
-        for (let i = 0; i < BLADE_COUNT; i++) {
-            blades.push({
+        // Geometries (Created once and reused across all swords)
+        const bladeShape = new THREE.Shape();
+        bladeShape.moveTo(0, 0);
+        bladeShape.lineTo(0.28, 0.4);
+        bladeShape.lineTo(0.22, 5.0);
+        bladeShape.lineTo(0, 5.8); // Blade Tip
+        bladeShape.lineTo(-0.22, 5.0);
+        bladeShape.lineTo(-0.28, 0.4);
+        bladeShape.closePath();
+
+        const extrudeSettings = {
+            depth: 0.06,
+            bevelEnabled: true,
+            bevelSegments: 3,
+            steps: 1,
+            bevelSize: 0.04,
+            bevelThickness: 0.03
+        };
+
+        const bladeGeo = new THREE.ExtrudeGeometry(bladeShape, extrudeSettings);
+        bladeGeo.center();
+
+        const fullerGeo = new THREE.BoxGeometry(0.08, 4.2, 0.08);
+        const centerGuardGeo = new THREE.BoxGeometry(0.7, 0.3, 0.4);
+        const armGeo = new THREE.CylinderGeometry(0.12, 0.2, 1.3, 16);
+        const handleGeo = new THREE.CylinderGeometry(0.13, 0.16, 1.4, 16);
+        const ringGeo = new THREE.TorusGeometry(0.15, 0.025, 8, 24);
+        const pommelGeo = new THREE.DodecahedronGeometry(0.3, 1);
+        const gemGeo = new THREE.OctahedronGeometry(0.18, 0);
+
+        // Factory function building the user's exact Valyrian Bastard Sword
+        function buildSingleValyrianSword() {
+            const masterGroup = new THREE.Group();
+            const swordModel = new THREE.Group();
+
+            // A. Blade
+            const bladeMesh = new THREE.Mesh(bladeGeo, steelMaterial);
+            bladeMesh.position.y = 2.7;
+            swordModel.add(bladeMesh);
+
+            // Fuller (Blood Groove)
+            const fullerMesh = new THREE.Mesh(fullerGeo, fullerMaterial);
+            fullerMesh.position.set(0, 2.5, 0);
+            swordModel.add(fullerMesh);
+
+            // B. Crossguard
+            const guardGroup = new THREE.Group();
+            const centerGuard = new THREE.Mesh(centerGuardGeo, goldMaterial);
+            guardGroup.add(centerGuard);
+
+            for (let side of [-1, 1]) {
+                const arm = new THREE.Mesh(armGeo, goldMaterial);
+                arm.position.set(side * 0.8, 0.15, 0);
+                arm.rotation.z = side * -0.4;
+                guardGroup.add(arm);
+            }
+            guardGroup.position.y = -0.3;
+            swordModel.add(guardGroup);
+
+            // C. Hilt / Handle
+            const handleMesh = new THREE.Mesh(handleGeo, leatherMaterial);
+            handleMesh.position.y = -1.15;
+            swordModel.add(handleMesh);
+
+            // Leather Grip Rings
+            for (let i = 0; i < 6; i++) {
+                const ring = new THREE.Mesh(ringGeo, goldMaterial);
+                ring.rotation.x = Math.PI / 2;
+                ring.position.y = -0.65 - (i * 0.18);
+                swordModel.add(ring);
+            }
+
+            // D. Pommel & Gem
+            const pommelMesh = new THREE.Mesh(pommelGeo, goldMaterial);
+            pommelMesh.position.y = -2.05;
+            swordModel.add(pommelMesh);
+
+            const rubyMesh = new THREE.Mesh(gemGeo, rubyMaterial);
+            rubyMesh.position.set(0, -2.05, 0.2);
+            swordModel.add(rubyMesh);
+
+            // Rotate so blade tip (+Y) points forward (+Z) for formation flight
+            swordModel.rotation.x = Math.PI / 2;
+            swordModel.scale.set(0.65, 0.65, 0.65);
+
+            masterGroup.add(swordModel);
+            return masterGroup;
+        }
+
+        // =====================================================================
+        // 4. SWORD ARRAY INSTANTIATION & DATA SETUP
+        // =====================================================================
+        const SWORD_COUNT = 180;
+        const swords = [];
+
+        for (let i = 0; i < SWORD_COUNT; i++) {
+            const swordObj = buildSingleValyrianSword();
+            scene.add(swordObj);
+
+            const ringTier = i % 3; // 0 = inner, 1 = mid, 2 = outer
+            swords.push({
+                group: swordObj,
                 pos: new THREE.Vector3(
-                    (Math.random() - 0.5) * 65,
-                    (Math.random() - 0.5) * 50,
-                    (Math.random() - 0.5) * 35
+                    (Math.random() - 0.5) * 55,
+                    (Math.random() - 0.5) * 40,
+                    (Math.random() - 0.5) * 30
                 ),
                 vel: new THREE.Vector3(),
                 target: new THREE.Vector3(),
-                orbitR: 4.5 + Math.random() * 14,
-                orbitSpeed: 0.018 + Math.random() * 0.032,
-                orbitAngle: Math.random() * Math.PI * 2,
-                orbitElevation: (Math.random() - 0.5) * Math.PI * 0.85,
-                phase: Math.random() * Math.PI * 2,
-                scale: 0.72 + Math.random() * 0.42
+                tangent: new THREE.Vector3(0, 0, 1),
+                ringTier: ringTier,
+                ringRadius: ringTier === 0 ? 11 : (ringTier === 1 ? 17 : 23),
+                ringTilt: ringTier === 0 ? 0.42 : (ringTier === 1 ? -0.42 : 0.0),
+                ringSpeed: ringTier === 0 ? 0.65 : (ringTier === 1 ? -0.50 : 0.35)
             });
         }
 
-        const dummy = new THREE.Object3D();
-
         // =====================================================================
-        // 4. INTERACTION, FORMATIONS & PLASMA COLOR SYSTEM
+        // 5. INTERACTION & STEEL FINISH SWITCHER
         // =====================================================================
         let currentStance = 'swarm'; // 'swarm', 'strike', 'drill', 'vortex', 'drift'
         let manualOverride = false;
@@ -749,34 +793,52 @@
             });
 
             clearTimeout(manualTimer);
-            manualTimer = setTimeout(() => { manualOverride = false; }, 14000);
+            manualTimer = setTimeout(() => { manualOverride = false; }, 15000);
         };
 
-        const plasmaPalettes = {
-            cyan: 0x00f3ff,
-            violet: 0xbc13fe,
-            gold: 0xffd700,
-            crimson: 0xff0055
-        };
-
-        window.setPlasmaColor = function(colorName, el) {
-            plasmaColorHex = plasmaPalettes[colorName] || 0x00f3ff;
-            plasmaMaterial.color.setHex(plasmaColorHex);
-            beaconLight.color.setHex(plasmaColorHex);
-            dustMat.color.setHex(plasmaColorHex);
-
-            document.querySelectorAll('.color-pill').forEach(p => p.classList.remove('active'));
+        // Material Switcher from User's Snippet
+        window.setSteelFinish = function(type, el) {
+            document.querySelectorAll('.btn-mat').forEach(b => b.classList.remove('active'));
             el.classList.add('active');
+
+            if (type === 'damascus') {
+                steelMaterial.color.setHex(0xe2e8f0);
+                steelMaterial.metalness = 0.95;
+                steelMaterial.roughness = 0.15;
+                steelMaterial.emissive.setHex(0x000000);
+                steelMaterial.emissiveIntensity = 0;
+            } else if (type === 'obsidian') {
+                steelMaterial.color.setHex(0x0f172a);
+                steelMaterial.metalness = 0.70;
+                steelMaterial.roughness = 0.05;
+                steelMaterial.emissive.setHex(0x020617);
+                steelMaterial.emissiveIntensity = 0.1;
+            } else if (type === 'gold') {
+                steelMaterial.color.setHex(0xf59e0b);
+                steelMaterial.metalness = 0.90;
+                steelMaterial.roughness = 0.20;
+                steelMaterial.emissive.setHex(0x78350f);
+                steelMaterial.emissiveIntensity = 0.2;
+            } else if (type === 'plasma') {
+                steelMaterial.color.setHex(0x06b6d4);
+                steelMaterial.metalness = 0.95;
+                steelMaterial.roughness = 0.15;
+                steelMaterial.emissive.setHex(0x06b6d4);
+                steelMaterial.emissiveIntensity = 0.7;
+            }
         };
 
-        // Mouse Fallback
+        // Mouse Controls & Parallax
         window.addEventListener('mousemove', (e) => {
-            mouse.x = (e.clientX / window.innerWidth - 0.5) * 46;
-            mouse.y = -(e.clientY / window.innerHeight - 0.5) * 32;
+            mouse.x = (e.clientX / window.innerWidth - 0.5) * 44;
+            mouse.y = -(e.clientY / window.innerHeight - 0.5) * 30;
 
-            // Update Reticle position
             reticle.style.left = `${e.clientX}px`;
             reticle.style.top = `${e.clientY}px`;
+
+            // Camera subtle parallax
+            camera.position.x = mouse.x * 0.08;
+            camera.position.y = mouse.y * 0.08;
 
             if (!handState.active && !manualOverride && !mouse.isDown) {
                 currentStance = 'swarm';
@@ -809,7 +871,7 @@
         });
 
         // =====================================================================
-        // 5. MEDIAPIPE VISION TELEMETRY PIPELINE
+        // 6. MEDIAPIPE VISION TELEMETRY
         // =====================================================================
         const videoElement = document.getElementById('webcam');
         const skeletonCanvas = document.getElementById('skeleton-canvas');
@@ -827,14 +889,13 @@
             const tips = [8, 12, 16, 20];
             const pips = [6, 10, 14, 18];
 
-            let curledFingers = 0;
+            let curledCount = 0;
             for (let i = 0; i < 4; i++) {
                 const dTip = Math.hypot(landmarks[tips[i]].x - wrist.x, landmarks[tips[i]].y - wrist.y);
                 const dPip = Math.hypot(landmarks[pips[i]].x - wrist.x, landmarks[pips[i]].y - wrist.y);
-                if (dTip < dPip * 1.05) curledFingers++;
+                if (dTip < dPip * 1.05) curledCount++;
             }
 
-            // Sword Stance: Index & Middle extended, Ring & Pinky curled
             const dIndexTip = Math.hypot(landmarks[8].x - wrist.x, landmarks[8].y - wrist.y);
             const dIndexPip = Math.hypot(landmarks[6].x - wrist.x, landmarks[6].y - wrist.y);
             const dMiddleTip = Math.hypot(landmarks[12].x - wrist.x, landmarks[12].y - wrist.y);
@@ -849,12 +910,8 @@
             const isRingCurled = dRingTip < dRingPip * 1.05;
             const isPinkyCurled = dPinkyTip < dPinkyPip * 1.05;
 
-            if (isIndexExt && isMiddleExt && isRingCurled && isPinkyCurled) {
-                return 'drill';
-            }
-            if (curledFingers >= 3) {
-                return 'strike';
-            }
+            if (isIndexExt && isMiddleExt && isRingCurled && isPinkyCurled) return 'drill';
+            if (curledCount >= 3) return 'strike';
             return 'swarm';
         }
 
@@ -866,8 +923,8 @@
             const h = skeletonCanvas.height;
 
             skeletonCtx.lineWidth = 2;
-            skeletonCtx.strokeStyle = '#00f3ff';
-            skeletonCtx.fillStyle = '#ff0055';
+            skeletonCtx.strokeStyle = '#06b6d4';
+            skeletonCtx.fillStyle = '#f59e0b';
 
             multiLandmarks.forEach(landmarks => {
                 landmarks.forEach(pt => {
@@ -901,13 +958,13 @@
 
                     const lm1 = results.multiHandLandmarks[0];
                     const palm1 = lm1[9];
-                    handState.pos1.set((0.5 - palm1.x) * 46, -(palm1.y - 0.5) * 32, 0);
+                    handState.pos1.set((0.5 - palm1.x) * 44, -(palm1.y - 0.5) * 30, 0);
                     pipCoords.innerText = `X:${handState.pos1.x.toFixed(1)} Y:${handState.pos1.y.toFixed(1)}`;
 
                     if (handState.count >= 2) {
                         const lm2 = results.multiHandLandmarks[1];
                         const palm2 = lm2[9];
-                        handState.pos2.set((0.5 - palm2.x) * 46, -(palm2.y - 0.5) * 32, 0);
+                        handState.pos2.set((0.5 - palm2.x) * 44, -(palm2.y - 0.5) * 30, 0);
                         handState.stance = 'vortex';
                     } else {
                         handState.stance = classifyHandGesture(lm1);
@@ -932,7 +989,9 @@
                     width: 320,
                     height: 240
                 });
-                cameraUtils.start().catch(() => {
+                cameraUtils.start().then(() => {
+                    teleVision.innerText = 'LOCKED';
+                }).catch(() => {
                     teleVision.innerText = 'MOUSE ONLY';
                 });
             } else {
@@ -943,9 +1002,8 @@
         }
 
         // =====================================================================
-        // 6. KINETIC SPRING PHYSICS & AERODYNAMIC ANIMATION LOOP
+        // 7. FORMATION FLIGHT PHYSICS & ANIMATION LOOP
         // =====================================================================
-        let lastFrameTime = performance.now();
         let frameCount = 0;
         let fpsTimer = performance.now();
 
@@ -963,7 +1021,7 @@
 
             const time = now * 0.001;
 
-            // Target Focal Point
+            // Target Focal Beacon Point
             const focalPoint = new THREE.Vector3();
             if (handState.active) {
                 focalPoint.copy(handState.pos1);
@@ -971,123 +1029,144 @@
                 focalPoint.set(mouse.x, mouse.y, 0);
             }
 
-            // Smooth Beacon Orb Tracking
-            beaconMesh.position.lerp(focalPoint, 0.14);
+            // Beacon Orb
+            beaconMesh.position.lerp(focalPoint, 0.15);
             beaconLight.position.copy(beaconMesh.position);
             beaconLight.intensity = (currentStance === 'strike' ? 7.5 : 4.5) + Math.sin(time * 6) * 1.5;
             beaconMesh.scale.setScalar(1 + Math.sin(time * 5) * 0.18);
 
-            // Subtle Dust Motion
-            dustParticles.rotation.y = time * 0.018;
+            embers.rotation.y = time * 0.015;
 
-            // Damped Spring Physics Settings
+            // Physics Parameters
             const springK = (currentStance === 'strike') ? 0.09 : (currentStance === 'drill') ? 0.075 : 0.045;
             const damping = (currentStance === 'strike') ? 0.82 : 0.87;
 
-            // Update All Kinetic Blades
-            for (let i = 0; i < BLADE_COUNT; i++) {
-                const b = blades[i];
-                const pos = b.pos;
-                const vel = b.vel;
-                const target = b.target;
+            // Update All 180 Valyrian Swords
+            for (let i = 0; i < SWORD_COUNT; i++) {
+                const s = swords[i];
+                const pos = s.pos;
+                const vel = s.vel;
+                const target = s.target;
+                const tangent = s.tangent;
 
-                if (currentStance === 'strike') {
-                    // --- HYPERDRIVE STRIKE (Concentric Railgun Barrage) ---
-                    const ringIndex = i % 16;
-                    const ringR = 0.6 + ringIndex * 0.35;
-                    const ringAngle = (i / 16) * 0.85 + time * 3.5;
-                    const zOffset = (ringIndex * 2.0) - 18;
+                if (currentStance === 'swarm') {
+                    // =========================================================
+                    // 01 // ORBITAL SWARM: 3 CONCENTRIC PLANETARY RINGS
+                    // (Blades fly along orbital tangents - clean, majestic rings!)
+                    // =========================================================
+                    const tier = s.ringTier;
+                    const r = s.ringRadius;
+                    const tilt = s.ringTilt;
+                    const speed = s.ringSpeed;
+                    const theta = (i / (SWORD_COUNT / 3)) * Math.PI * 2 + time * speed;
 
-                    target.x = focalPoint.x + Math.cos(ringAngle) * ringR;
-                    target.y = focalPoint.y + Math.sin(ringAngle) * ringR;
+                    const ringX = Math.cos(theta) * r;
+                    const ringY = Math.sin(theta) * r * Math.cos(tilt);
+                    const ringZ = Math.sin(theta) * r * Math.sin(tilt);
+
+                    target.x = focalPoint.x + ringX;
+                    target.y = focalPoint.y + ringY;
+                    target.z = focalPoint.z + ringZ;
+
+                    tangent.x = -Math.sin(theta);
+                    tangent.y = Math.cos(theta) * Math.cos(tilt);
+                    tangent.z = Math.cos(theta) * Math.sin(tilt);
+
+                } else if (currentStance === 'strike') {
+                    // =========================================================
+                    // 02 // HYPERDRIVE STRIKE: CONCENTRIC RAILGUN SPEARHEAD
+                    // =========================================================
+                    const layer = i % 14;
+                    const angle = (i / 14) * 0.95 + time * 3.5;
+                    const radius = 0.8 + layer * 0.55;
+                    const zOffset = (layer * 2.4) - 16;
+
+                    target.x = focalPoint.x + Math.cos(angle) * radius;
+                    target.y = focalPoint.y + Math.sin(angle) * radius;
                     target.z = focalPoint.z + zOffset;
 
+                    tangent.set(0, 0, 1);
+
                 } else if (currentStance === 'drill') {
-                    // --- HIGH-RPM LASER DRILL HELIX ---
-                    const drillR = 1.2 + (i % 8) * 0.32;
-                    const drillAngle = time * 14 + i * 0.11;
-                    const drillZ = -22 + (i / BLADE_COUNT) * 48;
+                    // =========================================================
+                    // 03 // LASER DRILL: HIGH-RPM TWIN-HELIX SPIRAL TUNNEL
+                    // =========================================================
+                    const drillR = 2.2 + (i % 5) * 0.6;
+                    const drillAngle = time * 14 + (i * 0.16);
+                    const drillZ = -20 + (i / SWORD_COUNT) * 45;
 
                     target.x = focalPoint.x + Math.cos(drillAngle) * drillR;
                     target.y = focalPoint.y + Math.sin(drillAngle) * drillR;
                     target.z = drillZ;
 
+                    tangent.set(0, 0, 1);
+
                 } else if (currentStance === 'vortex') {
-                    // --- DUAL YIN-YANG VORTEX ---
-                    const isHandOne = (i % 2 === 0);
+                    // =========================================================
+                    // 04 // DUAL VORTEX: TWIN YIN-YANG GALAXY ARMS
+                    // =========================================================
+                    const isArmOne = (i % 2 === 0);
                     const center = (handState.count >= 2)
-                        ? (isHandOne ? handState.pos1 : handState.pos2)
+                        ? (isArmOne ? handState.pos1 : handState.pos2)
                         : focalPoint;
 
-                    const angle = time * (isHandOne ? 2.8 : -2.8) + (i * 0.028);
-                    const radius = 3.8 + (i % 15) * 0.75;
+                    const angle = time * (isArmOne ? 2.8 : -2.8) + (i * 0.045);
+                    const radius = 4.2 + (i % 12) * 1.1;
 
                     target.x = center.x + Math.cos(angle) * radius;
                     target.y = center.y + Math.sin(angle) * radius;
-                    target.z = center.z + Math.sin(time * 3.5 + i) * 3.5;
+                    target.z = center.z + Math.sin(time * 3 + i) * 3;
 
-                } else if (currentStance === 'swarm') {
-                    // --- ORBITAL SWARM SHIELD ---
-                    const theta = b.orbitAngle + time * b.orbitSpeed * 3;
-                    const phi = b.orbitElevation + Math.sin(time + b.phase) * 0.35;
-                    const r = b.orbitR;
-
-                    target.x = focalPoint.x + r * Math.sin(phi) * Math.cos(theta);
-                    target.y = focalPoint.y + r * Math.sin(phi) * Math.sin(theta);
-                    target.z = focalPoint.z + r * Math.cos(phi);
+                    tangent.x = -Math.sin(angle) * (isArmOne ? 1 : -1);
+                    tangent.y = Math.cos(angle) * (isArmOne ? 1 : -1);
+                    tangent.z = 0;
 
                 } else {
-                    // --- HARMONIC DRIFT (Wave Matrix) ---
-                    const col = i % 35;
-                    const row = Math.floor(i / 35);
-                    const waveX = (col - 17.5) * 1.6;
-                    const waveY = (row - 17) * 1.3;
-                    const waveZ = Math.sin(time * 1.6 + col * 0.28 + row * 0.16) * 7.5;
+                    // =========================================================
+                    // 05 // HARMONIC DRIFT: CELESTIAL WAVE MATRIX
+                    // =========================================================
+                    const cols = 15;
+                    const col = i % cols;
+                    const row = Math.floor(i / cols);
+                    const waveX = (col - (cols / 2)) * 2.8;
+                    const waveY = (row - 6) * 2.4;
+                    const waveZ = Math.sin(time * 1.5 + col * 0.32 + row * 0.22) * 8.0;
 
                     target.x = waveX + Math.sin(time + row) * 2;
-                    target.y = waveY + Math.cos(time + col) * 1.6;
+                    target.y = waveY + Math.cos(time + col) * 1.5;
                     target.z = waveZ;
+
+                    tangent.set(0, 0.2, 1).normalize();
                 }
 
-                // Spring physics integration
+                // Spring physics
                 vel.x = (vel.x + (target.x - pos.x) * springK) * damping;
                 vel.y = (vel.y + (target.y - pos.y) * springK) * damping;
                 vel.z = (vel.z + (target.z - pos.z) * springK) * damping;
 
                 pos.add(vel);
 
-                dummy.position.copy(pos);
+                s.group.position.copy(pos);
 
-                // Aerodynamic Orientation & Banking
-                if (currentStance === 'strike') {
-                    dummy.lookAt(focalPoint.x, focalPoint.y, focalPoint.z + 28);
+                // Flight Orientation & Aerodynamic Banking
+                if (currentStance === 'swarm') {
+                    s.group.lookAt(pos.x + tangent.x * 6, pos.y + tangent.y * 6, pos.z + tangent.z * 6);
+                    s.group.rotateZ(0.25);
+                } else if (currentStance === 'strike') {
+                    s.group.lookAt(focalPoint.x, focalPoint.y, focalPoint.z + 32);
                 } else if (currentStance === 'drill') {
-                    dummy.lookAt(focalPoint.x, focalPoint.y, 45);
-                    dummy.rotateZ(time * 16 + i); // High RPM spin
-                } else if (currentStance === 'vortex' || currentStance === 'swarm') {
-                    const speed = vel.length();
-                    if (speed > 0.02) {
-                        dummy.lookAt(pos.x + vel.x * 6, pos.y + vel.y * 6, pos.z + vel.z * 6);
-                        dummy.rotateZ(-vel.x * 1.6); // Bank into turn
-                    } else {
-                        dummy.lookAt(focalPoint.x, focalPoint.y, focalPoint.z);
-                    }
+                    s.group.lookAt(focalPoint.x, focalPoint.y, 45);
+                    s.group.rotateZ(time * 16 + i);
+                } else if (currentStance === 'vortex') {
+                    s.group.lookAt(pos.x + tangent.x * 6, pos.y + tangent.y * 6, pos.z);
+                    s.group.rotateZ(0.3);
                 } else {
-                    dummy.lookAt(pos.x, pos.y + 1, pos.z + 6);
-                    dummy.rotateZ(Math.sin(time + i * 0.1) * 0.3);
+                    s.group.lookAt(pos.x, pos.y + 0.5, pos.z + 6);
+                    s.group.rotateZ(Math.sin(time + i * 0.15) * 0.25);
                 }
-
-                dummy.scale.setScalar(b.scale);
-                dummy.updateMatrix();
-
-                coreMesh.setMatrixAt(i, dummy.matrix);
-                plasmaMesh.setMatrixAt(i, dummy.matrix);
             }
 
-            coreMesh.instanceMatrix.needsUpdate = true;
-            plasmaMesh.instanceMatrix.needsUpdate = true;
-
-            // Render with Bloom Post-Processing
+            // Render
             if (composer) {
                 composer.render();
             } else {
