@@ -14,8 +14,8 @@
             --primary: #06b6d4;
             --primary-glow: rgba(6, 182, 212, 0.45);
             --bg-dark: #03050c;
-            --panel-bg: rgba(8, 14, 28, 0.88);
-            --panel-border: rgba(6, 182, 212, 0.3);
+            --panel-bg: rgba(8, 14, 28, 0.90);
+            --panel-border: rgba(6, 182, 212, 0.32);
             --accent-gold: #f59e0b;
             --accent-crimson: #e11d48;
             --text-main: #e2e8f0;
@@ -302,6 +302,34 @@
             box-shadow: 0 0 10px var(--primary-glow);
         }
 
+        /* --- Blade Count & Speed Selectors --- */
+        .selector-row {
+            display: flex;
+            gap: 6px;
+            margin-top: 6px;
+        }
+
+        .btn-pill {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #fff;
+            font-family: var(--font-mono);
+            font-size: 10px;
+            padding: 5px 0;
+            border-radius: 3px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .btn-pill.active {
+            background: rgba(245, 158, 11, 0.25);
+            border-color: var(--accent-gold);
+            color: var(--accent-gold);
+            font-weight: bold;
+        }
+
         /* --- Vision PIP --- */
         #vision-pip {
             position: absolute;
@@ -405,8 +433,9 @@
         }
     </style>
 
-    <!-- Core Three.js (r128) -->
+    <!-- Core Three.js (r128) & BufferGeometryUtils -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/utils/BufferGeometryUtils.js"></script>
 
     <!-- Three.js Postprocessing Pipeline -->
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
@@ -434,7 +463,7 @@
         <div class="telemetry-bar">
             <div class="telemetry-item">
                 <span class="telemetry-label">BLADES:</span>
-                <span class="telemetry-val" id="tele-blades">180</span>
+                <span class="telemetry-val" id="tele-blades">1,000</span>
             </div>
             <div class="telemetry-item">
                 <span class="telemetry-label">FPS:</span>
@@ -443,6 +472,10 @@
             <div class="telemetry-item">
                 <span class="telemetry-label">MODE:</span>
                 <span class="telemetry-val" id="tele-mode">ORBITAL SWARM</span>
+            </div>
+            <div class="telemetry-item">
+                <span class="telemetry-label">SPEED:</span>
+                <span class="telemetry-val" id="tele-speed">2.0X</span>
             </div>
             <div class="telemetry-item">
                 <span class="telemetry-label">VISION:</span>
@@ -498,6 +531,20 @@
             <button class="btn-mat" onclick="setSteelFinish('gold', this)">Gilded Gold</button>
             <button class="btn-mat" onclick="setSteelFinish('plasma', this)">Cyan Plasma</button>
         </div>
+
+        <div class="section-title">Blade Array Count</div>
+        <div class="selector-row">
+            <button class="btn-pill" onclick="setBladeCount(500, this)">500 SQUAD</button>
+            <button class="btn-pill active" onclick="setBladeCount(1000, this)">1,000 LEGION</button>
+            <button class="btn-pill" onclick="setBladeCount(1500, this)">1,500 ARMADA</button>
+        </div>
+
+        <div class="section-title">Kinetic Speed Multiplier</div>
+        <div class="selector-row">
+            <button class="btn-pill" onclick="setSpeedMultiplier(1.0, this)">1.0x STEADY</button>
+            <button class="btn-pill active" onclick="setSpeedMultiplier(2.0, this)">2.0x RAPID</button>
+            <button class="btn-pill" onclick="setSpeedMultiplier(3.5, this)">3.5x HYPER</button>
+        </div>
     </div>
 
     <!-- Vision Tracking Picture-In-Picture -->
@@ -523,10 +570,10 @@
         // =====================================================================
         const container = document.getElementById('canvas-container');
         const scene = new THREE.Scene();
-        scene.fog = new THREE.FogExp2(0x03050c, 0.015);
+        scene.fog = new THREE.FogExp2(0x03050c, 0.013);
 
-        const camera = new THREE.PerspectiveCamera(54, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.set(0, 0, 42);
+        const camera = new THREE.PerspectiveCamera(56, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(0, 0, 44);
 
         const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
         renderer.setSize(window.innerWidth, window.innerHeight);
@@ -540,9 +587,9 @@
             const renderScene = new THREE.RenderPass(scene, camera);
             const bloomPass = new THREE.UnrealBloomPass(
                 new THREE.Vector2(window.innerWidth, window.innerHeight),
-                1.0,  // Bloom Strength
-                0.3,  // Bloom Radius
-                0.72  // Bloom Threshold
+                1.15, // Bloom Strength
+                0.32, // Bloom Radius
+                0.68  // Bloom Threshold
             );
             composer = new THREE.EffectComposer(renderer);
             composer.addPass(renderScene);
@@ -557,85 +604,94 @@
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.95);
         scene.add(ambientLight);
 
-        const dirLight = new THREE.DirectionalLight(0xffffff, 2.5);
+        const dirLight = new THREE.DirectionalLight(0xffffff, 2.6);
         dirLight.position.set(5, 10, 7);
         scene.add(dirLight);
 
-        const pointLight1 = new THREE.PointLight(0x06b6d4, 3.5, 35);
-        pointLight1.position.set(-8, 5, 12);
+        const pointLight1 = new THREE.PointLight(0x06b6d4, 3.8, 40);
+        pointLight1.position.set(-10, 6, 14);
         scene.add(pointLight1);
 
-        const pointLight2 = new THREE.PointLight(0xf59e0b, 3.0, 35);
-        pointLight2.position.set(8, -5, 12);
+        const pointLight2 = new THREE.PointLight(0xf59e0b, 3.2, 40);
+        pointLight2.position.set(10, -6, 14);
         scene.add(pointLight2);
 
         // Focal Beacon
-        const beaconLight = new THREE.PointLight(0x06b6d4, 5.0, 35, 1.8);
+        const beaconLight = new THREE.PointLight(0x06b6d4, 5.5, 40, 1.8);
         scene.add(beaconLight);
 
         const beaconMesh = new THREE.Mesh(
-            new THREE.SphereGeometry(0.8, 24, 24),
-            new THREE.MeshBasicMaterial({ color: 0xdffaff, transparent: true, opacity: 0.9 })
+            new THREE.SphereGeometry(0.85, 24, 24),
+            new THREE.MeshBasicMaterial({ color: 0xdffaff, transparent: true, opacity: 0.92 })
         );
         scene.add(beaconMesh);
 
         // Ambient Embers
-        const emberCount = 200;
+        const emberCount = 350;
         const emberGeo = new THREE.BufferGeometry();
         const emberPos = new Float32Array(emberCount * 3);
         for (let i = 0; i < emberCount * 3; i += 3) {
-            emberPos[i] = (Math.random() - 0.5) * 140;
-            emberPos[i + 1] = (Math.random() - 0.5) * 100;
-            emberPos[i + 2] = (Math.random() - 0.5) * 70;
+            emberPos[i] = (Math.random() - 0.5) * 160;
+            emberPos[i + 1] = (Math.random() - 0.5) * 120;
+            emberPos[i + 2] = (Math.random() - 0.5) * 90;
         }
         emberGeo.setAttribute('position', new THREE.BufferAttribute(emberPos, 3));
         const emberMat = new THREE.PointsMaterial({
             color: 0x06b6d4,
             size: 0.45,
             transparent: true,
-            opacity: 0.5,
+            opacity: 0.45,
             blending: THREE.AdditiveBlending
         });
         const embers = new THREE.Points(emberGeo, emberMat);
         scene.add(embers);
 
         // =====================================================================
-        // 3. VALYRIAN SWORD SHARED GEOMETRIES & MATERIALS
+        // 3. MERGED VALYRIAN SWORD GEOMETRIES & MATERIALS
         // =====================================================================
+        function cleanGeo(geo) {
+            if (geo.index) geo = geo.toNonIndexed();
+            if (!geo.attributes.normal) geo.computeVertexNormals();
+            for (const key in geo.attributes) {
+                if (key !== 'position' && key !== 'normal') {
+                    geo.deleteAttribute(key);
+                }
+            }
+            return geo;
+        }
+
         const steelMaterial = new THREE.MeshStandardMaterial({
             color: 0xe2e8f0,
             metalness: 0.95,
-            roughness: 0.15
-        });
-
-        const fullerMaterial = new THREE.MeshStandardMaterial({
-            color: 0x475569,
-            metalness: 0.9,
-            roughness: 0.4
+            roughness: 0.15,
+            side: THREE.DoubleSide
         });
 
         const goldMaterial = new THREE.MeshStandardMaterial({
             color: 0xf59e0b,
-            metalness: 0.9,
-            roughness: 0.25
+            metalness: 0.90,
+            roughness: 0.25,
+            side: THREE.DoubleSide
         });
 
         const leatherMaterial = new THREE.MeshStandardMaterial({
             color: 0x271910,
-            metalness: 0.1,
-            roughness: 0.85
+            metalness: 0.10,
+            roughness: 0.85,
+            side: THREE.DoubleSide
         });
 
         const rubyMaterial = new THREE.MeshPhysicalMaterial({
             color: 0xd97706,
             emissive: 0xd97706,
-            emissiveIntensity: 0.4,
+            emissiveIntensity: 0.6,
             roughness: 0.1,
             transmission: 0.6,
-            thickness: 0.5
+            thickness: 0.5,
+            side: THREE.DoubleSide
         });
 
-        // Geometries (Created once and reused across all swords)
+        // --- A. Steel Parts: Extruded Blade & Fuller ---
         const bladeShape = new THREE.Shape();
         bladeShape.moveTo(0, 0);
         bladeShape.lineTo(0.28, 0.4);
@@ -654,106 +710,108 @@
             bevelThickness: 0.03
         };
 
-        const bladeGeo = new THREE.ExtrudeGeometry(bladeShape, extrudeSettings);
-        bladeGeo.center();
+        const rawBladeGeo = new THREE.ExtrudeGeometry(bladeShape, extrudeSettings);
+        rawBladeGeo.center();
+        rawBladeGeo.translate(0, 2.7, 0);
 
-        const fullerGeo = new THREE.BoxGeometry(0.08, 4.2, 0.08);
+        const rawFullerGeo = new THREE.BoxGeometry(0.08, 4.2, 0.08);
+        rawFullerGeo.translate(0, 2.5, 0);
+
+        const steelGeo = THREE.BufferGeometryUtils.mergeBufferGeometries([cleanGeo(rawBladeGeo), cleanGeo(rawFullerGeo)]);
+        steelGeo.rotateX(Math.PI / 2);
+        steelGeo.scale(0.68, 0.68, 0.68);
+
+        // --- B. Gold Parts: Crossguard, Arms, 6 Rings, Pommel ---
         const centerGuardGeo = new THREE.BoxGeometry(0.7, 0.3, 0.4);
-        const armGeo = new THREE.CylinderGeometry(0.12, 0.2, 1.3, 16);
-        const handleGeo = new THREE.CylinderGeometry(0.13, 0.16, 1.4, 16);
-        const ringGeo = new THREE.TorusGeometry(0.15, 0.025, 8, 24);
-        const pommelGeo = new THREE.DodecahedronGeometry(0.3, 1);
-        const gemGeo = new THREE.OctahedronGeometry(0.18, 0);
+        centerGuardGeo.translate(0, -0.3, 0);
 
-        // Factory function building the user's exact Valyrian Bastard Sword
-        function buildSingleValyrianSword() {
-            const masterGroup = new THREE.Group();
-            const swordModel = new THREE.Group();
+        const armLeftGeo = new THREE.CylinderGeometry(0.12, 0.2, 1.3, 16);
+        armLeftGeo.rotateZ(0.4);
+        armLeftGeo.translate(-0.8, -0.15, 0);
 
-            // A. Blade
-            const bladeMesh = new THREE.Mesh(bladeGeo, steelMaterial);
-            bladeMesh.position.y = 2.7;
-            swordModel.add(bladeMesh);
+        const armRightGeo = new THREE.CylinderGeometry(0.12, 0.2, 1.3, 16);
+        armRightGeo.rotateZ(-0.4);
+        armRightGeo.translate(0.8, -0.15, 0);
 
-            // Fuller (Blood Groove)
-            const fullerMesh = new THREE.Mesh(fullerGeo, fullerMaterial);
-            fullerMesh.position.set(0, 2.5, 0);
-            swordModel.add(fullerMesh);
-
-            // B. Crossguard
-            const guardGroup = new THREE.Group();
-            const centerGuard = new THREE.Mesh(centerGuardGeo, goldMaterial);
-            guardGroup.add(centerGuard);
-
-            for (let side of [-1, 1]) {
-                const arm = new THREE.Mesh(armGeo, goldMaterial);
-                arm.position.set(side * 0.8, 0.15, 0);
-                arm.rotation.z = side * -0.4;
-                guardGroup.add(arm);
-            }
-            guardGroup.position.y = -0.3;
-            swordModel.add(guardGroup);
-
-            // C. Hilt / Handle
-            const handleMesh = new THREE.Mesh(handleGeo, leatherMaterial);
-            handleMesh.position.y = -1.15;
-            swordModel.add(handleMesh);
-
-            // Leather Grip Rings
-            for (let i = 0; i < 6; i++) {
-                const ring = new THREE.Mesh(ringGeo, goldMaterial);
-                ring.rotation.x = Math.PI / 2;
-                ring.position.y = -0.65 - (i * 0.18);
-                swordModel.add(ring);
-            }
-
-            // D. Pommel & Gem
-            const pommelMesh = new THREE.Mesh(pommelGeo, goldMaterial);
-            pommelMesh.position.y = -2.05;
-            swordModel.add(pommelMesh);
-
-            const rubyMesh = new THREE.Mesh(gemGeo, rubyMaterial);
-            rubyMesh.position.set(0, -2.05, 0.2);
-            swordModel.add(rubyMesh);
-
-            // Rotate so blade tip (+Y) points forward (+Z) for formation flight
-            swordModel.rotation.x = Math.PI / 2;
-            swordModel.scale.set(0.65, 0.65, 0.65);
-
-            masterGroup.add(swordModel);
-            return masterGroup;
+        const ringGeos = [];
+        for (let i = 0; i < 6; i++) {
+            const ring = new THREE.TorusGeometry(0.15, 0.025, 8, 24);
+            ring.rotateX(Math.PI / 2);
+            ring.translate(0, -0.65 - (i * 0.18), 0);
+            ringGeos.push(cleanGeo(ring));
         }
 
-        // =====================================================================
-        // 4. SWORD ARRAY INSTANTIATION & DATA SETUP
-        // =====================================================================
-        const SWORD_COUNT = 180;
-        const swords = [];
+        const pommelGeo = new THREE.DodecahedronGeometry(0.3, 1);
+        pommelGeo.translate(0, -2.05, 0);
 
-        for (let i = 0; i < SWORD_COUNT; i++) {
-            const swordObj = buildSingleValyrianSword();
-            scene.add(swordObj);
+        const goldParts = [cleanGeo(centerGuardGeo), cleanGeo(armLeftGeo), cleanGeo(armRightGeo), ...ringGeos, cleanGeo(pommelGeo)];
+        const goldGeo = THREE.BufferGeometryUtils.mergeBufferGeometries(goldParts);
+        goldGeo.rotateX(Math.PI / 2);
+        goldGeo.scale(0.68, 0.68, 0.68);
 
-            const ringTier = i % 3; // 0 = inner, 1 = mid, 2 = outer
-            swords.push({
-                group: swordObj,
+        // --- C. Leather Handle ---
+        const handleGeo = new THREE.CylinderGeometry(0.13, 0.16, 1.4, 16);
+        handleGeo.translate(0, -1.15, 0);
+        const leatherGeo = cleanGeo(handleGeo);
+        leatherGeo.rotateX(Math.PI / 2);
+        leatherGeo.scale(0.68, 0.68, 0.68);
+
+        // --- D. Ruby Gem ---
+        const gemGeo = new THREE.OctahedronGeometry(0.18, 0);
+        gemGeo.translate(0, -2.05, 0.2);
+        const rubyGeo = cleanGeo(gemGeo);
+        rubyGeo.rotateX(Math.PI / 2);
+        rubyGeo.scale(0.68, 0.68, 0.68);
+
+        // =====================================================================
+        // 4. HIGH-PERFORMANCE INSTANCED MESHES (UP TO 1,500 SWORDS)
+        // =====================================================================
+        const MAX_BLADES = 1500;
+        let activeBladeCount = 1000;
+        let speedMultiplier = 2.0;
+
+        const steelMesh = new THREE.InstancedMesh(steelGeo, steelMaterial, MAX_BLADES);
+        const goldMesh = new THREE.InstancedMesh(goldGeo, goldMaterial, MAX_BLADES);
+        const leatherMesh = new THREE.InstancedMesh(leatherGeo, leatherMaterial, MAX_BLADES);
+        const rubyMesh = new THREE.InstancedMesh(rubyGeo, rubyMaterial, MAX_BLADES);
+
+        steelMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+        goldMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+        leatherMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+        rubyMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+
+        scene.add(steelMesh);
+        scene.add(goldMesh);
+        scene.add(leatherMesh);
+        scene.add(rubyMesh);
+
+        // Simulation State for 1,500 Swords
+        const bladeData = [];
+        for (let i = 0; i < MAX_BLADES; i++) {
+            // 4 concentric planetary rings for majestic swarm distribution
+            const ringTier = i % 4; // 0 = inner, 1 = mid-inner, 2 = mid-outer, 3 = outer
+            bladeData.push({
                 pos: new THREE.Vector3(
-                    (Math.random() - 0.5) * 55,
-                    (Math.random() - 0.5) * 40,
-                    (Math.random() - 0.5) * 30
+                    (Math.random() - 0.5) * 65,
+                    (Math.random() - 0.5) * 50,
+                    (Math.random() - 0.5) * 35
                 ),
                 vel: new THREE.Vector3(),
                 target: new THREE.Vector3(),
                 tangent: new THREE.Vector3(0, 0, 1),
                 ringTier: ringTier,
-                ringRadius: ringTier === 0 ? 11 : (ringTier === 1 ? 17 : 23),
-                ringTilt: ringTier === 0 ? 0.42 : (ringTier === 1 ? -0.42 : 0.0),
-                ringSpeed: ringTier === 0 ? 0.65 : (ringTier === 1 ? -0.50 : 0.35)
+                ringRadius: ringTier === 0 ? 11 : (ringTier === 1 ? 17 : (ringTier === 2 ? 23 : 29)),
+                ringTilt: ringTier === 0 ? 0.48 : (ringTier === 1 ? -0.48 : (ringTier === 2 ? 0.22 : 0.0)),
+                ringSpeed: ringTier === 0 ? 1.4 : (ringTier === 1 ? -1.1 : (ringTier === 2 ? 0.85 : -0.65)),
+                ringPhase: (i / MAX_BLADES) * Math.PI * 2,
+                scale: 0.95 + (i % 5) * 0.03
             });
         }
 
+        const dummy = new THREE.Object3D();
+
         // =====================================================================
-        // 5. INTERACTION & STEEL FINISH SWITCHER
+        // 5. INTERACTION & STEEL FINISH CONTROLS
         // =====================================================================
         let currentStance = 'swarm'; // 'swarm', 'strike', 'drill', 'vortex', 'drift'
         let manualOverride = false;
@@ -769,7 +827,9 @@
 
         const mouse = { x: 0, y: 0, isDown: false };
 
+        const teleBlades = document.getElementById('tele-blades');
         const teleMode = document.getElementById('tele-mode');
+        const teleSpeed = document.getElementById('tele-speed');
         const teleVision = document.getElementById('tele-vision');
         const pipCoords = document.getElementById('pip-coords');
         const statusDot = document.getElementById('status-dot');
@@ -794,6 +854,28 @@
 
             clearTimeout(manualTimer);
             manualTimer = setTimeout(() => { manualOverride = false; }, 15000);
+        };
+
+        window.setBladeCount = function(count, el) {
+            activeBladeCount = count;
+            teleBlades.innerText = count.toLocaleString();
+            document.querySelectorAll('.btn-pill').forEach(b => {
+                if (b.innerText.includes('SQUAD') || b.innerText.includes('LEGION') || b.innerText.includes('ARMADA')) {
+                    b.classList.remove('active');
+                }
+            });
+            el.classList.add('active');
+        };
+
+        window.setSpeedMultiplier = function(spd, el) {
+            speedMultiplier = spd;
+            teleSpeed.innerText = `${spd.toFixed(1)}X`;
+            document.querySelectorAll('.btn-pill').forEach(b => {
+                if (b.innerText.includes('STEADY') || b.innerText.includes('RAPID') || b.innerText.includes('HYPER')) {
+                    b.classList.remove('active');
+                }
+            });
+            el.classList.add('active');
         };
 
         // Material Switcher from User's Snippet
@@ -824,7 +906,7 @@
                 steelMaterial.metalness = 0.95;
                 steelMaterial.roughness = 0.15;
                 steelMaterial.emissive.setHex(0x06b6d4);
-                steelMaterial.emissiveIntensity = 0.7;
+                steelMaterial.emissiveIntensity = 0.75;
             }
         };
 
@@ -1002,7 +1084,7 @@
         }
 
         // =====================================================================
-        // 7. FORMATION FLIGHT PHYSICS & ANIMATION LOOP
+        // 7. HIGH-SPEED FORMATION FLIGHT PHYSICS & RENDERING LOOP
         // =====================================================================
         let frameCount = 0;
         let fpsTimer = performance.now();
@@ -1019,7 +1101,7 @@
                 fpsTimer = now;
             }
 
-            const time = now * 0.001;
+            const time = now * 0.001 * speedMultiplier;
 
             // Target Focal Beacon Point
             const focalPoint = new THREE.Vector3();
@@ -1030,35 +1112,47 @@
             }
 
             // Beacon Orb
-            beaconMesh.position.lerp(focalPoint, 0.15);
+            beaconMesh.position.lerp(focalPoint, 0.18 * speedMultiplier);
             beaconLight.position.copy(beaconMesh.position);
             beaconLight.intensity = (currentStance === 'strike' ? 7.5 : 4.5) + Math.sin(time * 6) * 1.5;
             beaconMesh.scale.setScalar(1 + Math.sin(time * 5) * 0.18);
 
             embers.rotation.y = time * 0.015;
 
-            // Physics Parameters
-            const springK = (currentStance === 'strike') ? 0.09 : (currentStance === 'drill') ? 0.075 : 0.045;
-            const damping = (currentStance === 'strike') ? 0.82 : 0.87;
+            // High-Speed Physics Parameters (Responsive & Kinetic)
+            const springK = ((currentStance === 'strike') ? 0.20 : (currentStance === 'drill') ? 0.16 : 0.09) * Math.min(speedMultiplier, 2.5);
+            const damping = (currentStance === 'strike') ? 0.86 : 0.88;
 
-            // Update All 180 Valyrian Swords
-            for (let i = 0; i < SWORD_COUNT; i++) {
-                const s = swords[i];
-                const pos = s.pos;
-                const vel = s.vel;
-                const target = s.target;
-                const tangent = s.tangent;
+            // Update All 1,000+ Valyrian Swords
+            for (let i = 0; i < MAX_BLADES; i++) {
+                const b = bladeData[i];
+
+                if (i >= activeBladeCount) {
+                    dummy.position.set(0, 0, -9999);
+                    dummy.scale.setScalar(0);
+                    dummy.updateMatrix();
+                    steelMesh.setMatrixAt(i, dummy.matrix);
+                    goldMesh.setMatrixAt(i, dummy.matrix);
+                    leatherMesh.setMatrixAt(i, dummy.matrix);
+                    rubyMesh.setMatrixAt(i, dummy.matrix);
+                    continue;
+                }
+
+                const pos = b.pos;
+                const vel = b.vel;
+                const target = b.target;
+                const tangent = b.tangent;
 
                 if (currentStance === 'swarm') {
                     // =========================================================
-                    // 01 // ORBITAL SWARM: 3 CONCENTRIC PLANETARY RINGS
-                    // (Blades fly along orbital tangents - clean, majestic rings!)
+                    // 01 // ORBITAL SWARM: 4 CONCENTRIC PLANETARY RINGS
+                    // (Blades fly at supersonic speed along orbital tangents)
                     // =========================================================
-                    const tier = s.ringTier;
-                    const r = s.ringRadius;
-                    const tilt = s.ringTilt;
-                    const speed = s.ringSpeed;
-                    const theta = (i / (SWORD_COUNT / 3)) * Math.PI * 2 + time * speed;
+                    const tier = b.ringTier;
+                    const r = b.ringRadius;
+                    const tilt = b.ringTilt;
+                    const speed = b.ringSpeed;
+                    const theta = (i / (activeBladeCount / 4)) * Math.PI * 2 + time * speed;
 
                     const ringX = Math.cos(theta) * r;
                     const ringY = Math.sin(theta) * r * Math.cos(tilt);
@@ -1074,12 +1168,13 @@
 
                 } else if (currentStance === 'strike') {
                     // =========================================================
-                    // 02 // HYPERDRIVE STRIKE: CONCENTRIC RAILGUN SPEARHEAD
+                    // 02 // HYPERDRIVE STRIKE: MULTI-LAYERED RAILGUN SPEARHEAD
+                    // (1,000 blades thrust forward at supersonic acceleration)
                     // =========================================================
-                    const layer = i % 14;
-                    const angle = (i / 14) * 0.95 + time * 3.5;
-                    const radius = 0.8 + layer * 0.55;
-                    const zOffset = (layer * 2.4) - 16;
+                    const layer = i % 24;
+                    const angle = (i / 24) * 0.95 + time * 4.5;
+                    const radius = 0.8 + layer * 0.42;
+                    const zOffset = (layer * 2.2) - 22;
 
                     target.x = focalPoint.x + Math.cos(angle) * radius;
                     target.y = focalPoint.y + Math.sin(angle) * radius;
@@ -1091,9 +1186,9 @@
                     // =========================================================
                     // 03 // LASER DRILL: HIGH-RPM TWIN-HELIX SPIRAL TUNNEL
                     // =========================================================
-                    const drillR = 2.2 + (i % 5) * 0.6;
-                    const drillAngle = time * 14 + (i * 0.16);
-                    const drillZ = -20 + (i / SWORD_COUNT) * 45;
+                    const drillR = 2.2 + (i % 8) * 0.45;
+                    const drillAngle = time * 18 + (i * 0.12);
+                    const drillZ = -25 + (i / activeBladeCount) * 55;
 
                     target.x = focalPoint.x + Math.cos(drillAngle) * drillR;
                     target.y = focalPoint.y + Math.sin(drillAngle) * drillR;
@@ -1110,8 +1205,8 @@
                         ? (isArmOne ? handState.pos1 : handState.pos2)
                         : focalPoint;
 
-                    const angle = time * (isArmOne ? 2.8 : -2.8) + (i * 0.045);
-                    const radius = 4.2 + (i % 12) * 1.1;
+                    const angle = time * (isArmOne ? 3.5 : -3.5) + (i * 0.035);
+                    const radius = 4.2 + (i % 18) * 0.85;
 
                     target.x = center.x + Math.cos(angle) * radius;
                     target.y = center.y + Math.sin(angle) * radius;
@@ -1125,12 +1220,12 @@
                     // =========================================================
                     // 05 // HARMONIC DRIFT: CELESTIAL WAVE MATRIX
                     // =========================================================
-                    const cols = 15;
+                    const cols = 35;
                     const col = i % cols;
                     const row = Math.floor(i / cols);
-                    const waveX = (col - (cols / 2)) * 2.8;
-                    const waveY = (row - 6) * 2.4;
-                    const waveZ = Math.sin(time * 1.5 + col * 0.32 + row * 0.22) * 8.0;
+                    const waveX = (col - (cols / 2)) * 2.2;
+                    const waveY = (row - 14) * 1.8;
+                    const waveZ = Math.sin(time * 1.8 + col * 0.32 + row * 0.18) * 8.5;
 
                     target.x = waveX + Math.sin(time + row) * 2;
                     target.y = waveY + Math.cos(time + col) * 1.5;
@@ -1139,32 +1234,45 @@
                     tangent.set(0, 0.2, 1).normalize();
                 }
 
-                // Spring physics
+                // High-speed spring physics integration
                 vel.x = (vel.x + (target.x - pos.x) * springK) * damping;
                 vel.y = (vel.y + (target.y - pos.y) * springK) * damping;
                 vel.z = (vel.z + (target.z - pos.z) * springK) * damping;
 
                 pos.add(vel);
 
-                s.group.position.copy(pos);
+                dummy.position.copy(pos);
 
                 // Flight Orientation & Aerodynamic Banking
                 if (currentStance === 'swarm') {
-                    s.group.lookAt(pos.x + tangent.x * 6, pos.y + tangent.y * 6, pos.z + tangent.z * 6);
-                    s.group.rotateZ(0.25);
+                    dummy.lookAt(pos.x + tangent.x * 6, pos.y + tangent.y * 6, pos.z + tangent.z * 6);
+                    dummy.rotateZ(0.25);
                 } else if (currentStance === 'strike') {
-                    s.group.lookAt(focalPoint.x, focalPoint.y, focalPoint.z + 32);
+                    dummy.lookAt(focalPoint.x, focalPoint.y, focalPoint.z + 32);
                 } else if (currentStance === 'drill') {
-                    s.group.lookAt(focalPoint.x, focalPoint.y, 45);
-                    s.group.rotateZ(time * 16 + i);
+                    dummy.lookAt(focalPoint.x, focalPoint.y, 45);
+                    dummy.rotateZ(time * 20 + i);
                 } else if (currentStance === 'vortex') {
-                    s.group.lookAt(pos.x + tangent.x * 6, pos.y + tangent.y * 6, pos.z);
-                    s.group.rotateZ(0.3);
+                    dummy.lookAt(pos.x + tangent.x * 6, pos.y + tangent.y * 6, pos.z);
+                    dummy.rotateZ(0.3);
                 } else {
-                    s.group.lookAt(pos.x, pos.y + 0.5, pos.z + 6);
-                    s.group.rotateZ(Math.sin(time + i * 0.15) * 0.25);
+                    dummy.lookAt(pos.x, pos.y + 0.5, pos.z + 6);
+                    dummy.rotateZ(Math.sin(time + i * 0.15) * 0.25);
                 }
+
+                dummy.scale.setScalar(b.scale);
+                dummy.updateMatrix();
+
+                steelMesh.setMatrixAt(i, dummy.matrix);
+                goldMesh.setMatrixAt(i, dummy.matrix);
+                leatherMesh.setMatrixAt(i, dummy.matrix);
+                rubyMesh.setMatrixAt(i, dummy.matrix);
             }
+
+            steelMesh.instanceMatrix.needsUpdate = true;
+            goldMesh.instanceMatrix.needsUpdate = true;
+            leatherMesh.instanceMatrix.needsUpdate = true;
+            rubyMesh.instanceMatrix.needsUpdate = true;
 
             // Render
             if (composer) {
