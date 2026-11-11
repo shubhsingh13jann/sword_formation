@@ -1,3 +1,4 @@
+<!-- [v2.0-boid-steering] Dynamic flocking vectors and velocity integration -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -474,8 +475,16 @@
                 <span class="telemetry-val" id="tele-mode">ORBITAL SWARM</span>
             </div>
             <div class="telemetry-item">
+                <span class="telemetry-label">VIEW:</span>
+                <span class="telemetry-val" id="tele-view">SIDE VIEW</span>
+            </div>
+            <div class="telemetry-item">
                 <span class="telemetry-label">SPEED:</span>
-                <span class="telemetry-val" id="tele-speed">2.0X</span>
+                <span class="telemetry-val" id="tele-speed">1.0X</span>
+            </div>
+            <div class="telemetry-item btn-audio" id="audio-toggle-btn" onclick="toggleAudio()" title="Click to Toggle Spatial Web Audio" style="cursor: pointer;">
+                <span class="telemetry-label">AUDIO:</span>
+                <span class="telemetry-val" id="tele-audio" style="color: #00ff88;">ONLINE</span>
             </div>
             <div class="telemetry-item">
                 <span class="telemetry-label">VISION:</span>
@@ -499,19 +508,23 @@
             </div>
             <div class="guide-row">
                 <span class="guide-key">CLOSED FIST</span>
-                <span class="guide-desc">HYPERDRIVE STRIKE</span>
+                <span class="guide-desc">WAN JIAN GUI ZONG STRIKE</span>
             </div>
             <div class="guide-row">
-                <span class="guide-key">SWORD STANCE</span>
+                <span class="guide-key">SWORD FINGER</span>
                 <span class="guide-desc">HIGH-RPM LASER DRILL</span>
+            </div>
+            <div class="guide-row">
+                <span class="guide-key">PINCH GESTURE</span>
+                <span class="guide-desc">BLADE HALO DISC</span>
             </div>
             <div class="guide-row">
                 <span class="guide-key">DUAL HANDS</span>
                 <span class="guide-desc">DUAL YIN-YANG VORTEX</span>
             </div>
             <div class="guide-row">
-                <span class="guide-key">MOUSE CLICK</span>
-                <span class="guide-desc">MANUAL RAILGUN STRIKE</span>
+                <span class="guide-key">MOUSE DRAG</span>
+                <span class="guide-desc">360° ORBIT / WHEEL ZOOM</span>
             </div>
         </div>
 
@@ -520,8 +533,9 @@
             <button class="btn-formation active" onclick="setStance('swarm')">01 // SWARM</button>
             <button class="btn-formation" onclick="setStance('strike')">02 // STRIKE</button>
             <button class="btn-formation" onclick="setStance('drill')">03 // DRILL</button>
-            <button class="btn-formation" onclick="setStance('vortex')">04 // VORTEX</button>
-            <button class="btn-formation" onclick="setStance('drift')" style="grid-column: span 2;">05 // HARMONIC DRIFT</button>
+            <button class="btn-formation" onclick="setStance('halo')">04 // HALO</button>
+            <button class="btn-formation" onclick="setStance('vortex')">05 // VORTEX</button>
+            <button class="btn-formation" onclick="setStance('drift')">06 // DRIFT</button>
         </div>
 
         <div class="section-title">Steel Finish</div>
@@ -541,9 +555,17 @@
 
         <div class="section-title">Kinetic Speed Multiplier</div>
         <div class="selector-row">
-            <button class="btn-pill" onclick="setSpeedMultiplier(1.0, this)">1.0x STEADY</button>
-            <button class="btn-pill active" onclick="setSpeedMultiplier(2.0, this)">2.0x RAPID</button>
-            <button class="btn-pill" onclick="setSpeedMultiplier(3.5, this)">3.5x HYPER</button>
+            <button class="btn-pill" onclick="setSpeedMultiplier(0.5, this)">0.5x CINEMATIC</button>
+            <button class="btn-pill active" onclick="setSpeedMultiplier(1.0, this)">1.0x MAJESTIC</button>
+            <button class="btn-pill" onclick="setSpeedMultiplier(1.8, this)">1.8x RAPID</button>
+        </div>
+
+        <div class="section-title">Perspective View (or Rotate Hand)</div>
+        <div class="selector-row">
+            <button class="btn-pill btn-view active" onclick="setCameraView('side', this)">SIDE VIEW</button>
+            <button class="btn-pill btn-view" onclick="setCameraView('isometric', this)">3/4 ISOMETRIC</button>
+            <button class="btn-pill btn-view" onclick="setCameraView('top', this)">TOP DOWN</button>
+            <button class="btn-pill btn-view" onclick="setCameraView('front', this)">FRONT</button>
         </div>
     </div>
 
@@ -572,8 +594,23 @@
         const scene = new THREE.Scene();
         scene.fog = new THREE.FogExp2(0x03050c, 0.013);
 
-        const camera = new THREE.PerspectiveCamera(56, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.set(0, 0, 44);
+        const camera = new THREE.PerspectiveCamera(54, window.innerWidth / window.innerHeight, 0.1, 1000);
+        
+        // 3D Perspective Presets (Default SIDE VIEW so full blade lengths and profiles are clearly visible!)
+        const cameraPresets = {
+            side: new THREE.Vector3(42, 6, 8),
+            isometric: new THREE.Vector3(26, 16, 32),
+            top: new THREE.Vector3(0, 48, 6),
+            front: new THREE.Vector3(0, 0, 44)
+        };
+        let currentView = 'side';
+        const targetCameraPos = cameraPresets.side.clone();
+        camera.position.copy(targetCameraPos);
+        camera.lookAt(0, 0, 0);
+
+        let cameraRadius = targetCameraPos.length();
+        let cameraTheta = Math.atan2(targetCameraPos.x, targetCameraPos.z);
+        let cameraPhi = Math.acos(Math.max(-1, Math.min(1, targetCameraPos.y / cameraRadius)));
 
         const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
         renderer.setSize(window.innerWidth, window.innerHeight);
@@ -618,13 +655,11 @@
 
         // Focal Beacon
         const beaconLight = new THREE.PointLight(0x06b6d4, 5.5, 40, 1.8);
-        scene.add(beaconLight);
 
         const beaconMesh = new THREE.Mesh(
             new THREE.SphereGeometry(0.85, 24, 24),
             new THREE.MeshBasicMaterial({ color: 0xdffaff, transparent: true, opacity: 0.92 })
         );
-        scene.add(beaconMesh);
 
         // Ambient Embers
         const emberCount = 350;
@@ -768,7 +803,7 @@
         // =====================================================================
         const MAX_BLADES = 1500;
         let activeBladeCount = 1000;
-        let speedMultiplier = 2.0;
+        let speedMultiplier = 1.0;
 
         const steelMesh = new THREE.InstancedMesh(steelGeo, steelMaterial, MAX_BLADES);
         const goldMesh = new THREE.InstancedMesh(goldGeo, goldMaterial, MAX_BLADES);
@@ -780,12 +815,17 @@
         leatherMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
         rubyMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
 
-        scene.add(steelMesh);
-        scene.add(goldMesh);
-        scene.add(leatherMesh);
-        scene.add(rubyMesh);
+        const formationGroup = new THREE.Group();
+        scene.add(formationGroup);
 
-        // Simulation State for 1,500 Swords
+        formationGroup.add(steelMesh);
+        formationGroup.add(goldMesh);
+        formationGroup.add(leatherMesh);
+        formationGroup.add(rubyMesh);
+        formationGroup.add(beaconMesh);
+        formationGroup.add(beaconLight);
+
+        // Simulation State for 1,500 Swords with Boid Flocking & Liquid-Metal Morphing
         const bladeData = [];
         for (let i = 0; i < MAX_BLADES; i++) {
             // 4 concentric planetary rings for majestic swarm distribution
@@ -796,36 +836,178 @@
                     (Math.random() - 0.5) * 50,
                     (Math.random() - 0.5) * 35
                 ),
-                vel: new THREE.Vector3(),
+                vel: new THREE.Vector3((Math.random() - 0.5) * 2, (Math.random() - 0.5) * 2, (Math.random() - 0.5) * 2),
                 target: new THREE.Vector3(),
+                prevTarget: new THREE.Vector3(),
                 tangent: new THREE.Vector3(0, 0, 1),
                 ringTier: ringTier,
                 ringRadius: ringTier === 0 ? 11 : (ringTier === 1 ? 17 : (ringTier === 2 ? 23 : 29)),
                 ringTilt: ringTier === 0 ? 0.48 : (ringTier === 1 ? -0.48 : (ringTier === 2 ? 0.22 : 0.0)),
-                ringSpeed: ringTier === 0 ? 1.4 : (ringTier === 1 ? -1.1 : (ringTier === 2 ? 0.85 : -0.65)),
+                ringSpeed: ringTier === 0 ? 0.32 : (ringTier === 1 ? -0.25 : (ringTier === 2 ? 0.19 : -0.15)),
                 ringPhase: (i / MAX_BLADES) * Math.PI * 2,
-                scale: 0.95 + (i % 5) * 0.03
+                scale: 0.95 + (i % 5) * 0.03,
+                morphDelay: (i / MAX_BLADES) * 0.35,
+                morphT: 1.0
             });
         }
 
         const dummy = new THREE.Object3D();
 
         // =====================================================================
+        // PROCEDURAL XIANXIA WEB AUDIO SYNTHESIZER
+        // (100% Client-Side Real-Time Sound Synthesis - Zero Audio Files Required)
+        // =====================================================================
+        class SwordSoundEngine {
+            constructor() {
+                this.ctx = null;
+                this.isOnline = true;
+                this.initialized = false;
+                this.whooshFilter = null;
+                this.whooshGain = null;
+            }
+
+            init() {
+                if (this.initialized) return;
+                try {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    this.ctx = new AudioContext();
+
+                    // 1. Ethereal Qi Drone (Low-frequency harmonic hum)
+                    const osc1 = this.ctx.createOscillator();
+                    const osc2 = this.ctx.createOscillator();
+                    osc1.type = 'sine';
+                    osc1.frequency.setValueAtTime(55, this.ctx.currentTime);
+                    osc2.type = 'triangle';
+                    osc2.frequency.setValueAtTime(110, this.ctx.currentTime);
+
+                    const droneGain = this.ctx.createGain();
+                    droneGain.gain.setValueAtTime(0.025, this.ctx.currentTime);
+
+                    const droneFilter = this.ctx.createBiquadFilter();
+                    droneFilter.type = 'lowpass';
+                    droneFilter.frequency.setValueAtTime(200, this.ctx.currentTime);
+
+                    osc1.connect(droneFilter);
+                    osc2.connect(droneFilter);
+                    droneFilter.connect(droneGain);
+                    droneGain.connect(this.ctx.destination);
+
+                    osc1.start();
+                    osc2.start();
+
+                    // 2. Whoosh Noise Buffer (Aerodynamic blade swooshing)
+                    const bufferSize = this.ctx.sampleRate * 2;
+                    const noiseBuffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                    const output = noiseBuffer.getChannelData(0);
+                    for (let i = 0; i < bufferSize; i++) {
+                        output[i] = Math.random() * 2 - 1;
+                    }
+
+                    const noiseSource = this.ctx.createBufferSource();
+                    noiseSource.buffer = noiseBuffer;
+                    noiseSource.loop = true;
+
+                    this.whooshFilter = this.ctx.createBiquadFilter();
+                    this.whooshFilter.type = 'bandpass';
+                    this.whooshFilter.Q.setValueAtTime(2.2, this.ctx.currentTime);
+                    this.whooshFilter.frequency.setValueAtTime(320, this.ctx.currentTime);
+
+                    this.whooshGain = this.ctx.createGain();
+                    this.whooshGain.gain.setValueAtTime(0.012, this.ctx.currentTime);
+
+                    noiseSource.connect(this.whooshFilter);
+                    this.whooshFilter.connect(this.whooshGain);
+                    this.whooshGain.connect(this.ctx.destination);
+                    noiseSource.start();
+
+                    this.initialized = true;
+                } catch(e) {
+                    console.warn("Web Audio API:", e);
+                }
+            }
+
+            updateVelocity(vel) {
+                if (!this.initialized || !this.isOnline || !this.whooshFilter) return;
+                const norm = Math.min(vel / 20, 1.0);
+                const targetFreq = 260 + norm * 1500;
+                const targetGain = 0.01 + norm * 0.09;
+                this.whooshFilter.frequency.setTargetAtTime(targetFreq, this.ctx.currentTime, 0.08);
+                this.whooshGain.gain.setTargetAtTime(targetGain, this.ctx.currentTime, 0.08);
+            }
+
+            playClash() {
+                if (!this.initialized || !this.isOnline || !this.ctx) return;
+                try {
+                    const now = this.ctx.currentTime;
+                    const freqs = [1850, 2400, 3100];
+                    freqs.forEach(f => {
+                        const osc = this.ctx.createOscillator();
+                        const gain = this.ctx.createGain();
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(f, now);
+
+                        gain.gain.setValueAtTime(0.07, now);
+                        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.75);
+
+                        osc.connect(gain);
+                        gain.connect(this.ctx.destination);
+
+                        osc.start(now);
+                        osc.stop(now + 0.8);
+                    });
+                } catch(e) {}
+            }
+
+            toggle() {
+                if (!this.initialized) this.init();
+                this.isOnline = !this.isOnline;
+                if (this.ctx) {
+                    if (!this.isOnline) {
+                        this.ctx.suspend();
+                    } else {
+                        this.ctx.resume();
+                    }
+                }
+                return this.isOnline;
+            }
+        }
+
+        const soundEngine = new SwordSoundEngine();
+        window.addEventListener('pointerdown', () => soundEngine.init(), { once: true });
+        window.addEventListener('keydown', () => soundEngine.init(), { once: true });
+
+        window.toggleAudio = function() {
+            const isOnline = soundEngine.toggle();
+            const el = document.getElementById('tele-audio');
+            if (el) {
+                el.innerText = isOnline ? 'ONLINE' : 'MUTED';
+                el.style.color = isOnline ? '#00ff88' : '#ff4444';
+            }
+        };
+
+        // =====================================================================
         // 5. INTERACTION & STEEL FINISH CONTROLS
         // =====================================================================
-        let currentStance = 'swarm'; // 'swarm', 'strike', 'drill', 'vortex', 'drift'
+        let currentStance = 'swarm'; // 'swarm', 'strike', 'drill', 'halo', 'vortex', 'drift'
         let manualOverride = false;
         let manualTimer = null;
 
         const handState = {
             active: false,
             count: 0,
+            screenX: 0,
+            screenY: 0,
+            roll: 0,
+            pitch: 0,
+            yaw: 0,
             pos1: new THREE.Vector3(0, 0, 0),
             pos2: new THREE.Vector3(0, 0, 0),
             stance: 'swarm'
         };
 
         const mouse = { x: 0, y: 0, isDown: false };
+        let isOrbiting = false;
+        let lastMousePos = { x: 0, y: 0 };
 
         const teleBlades = document.getElementById('tele-blades');
         const teleMode = document.getElementById('tele-mode');
@@ -837,19 +1019,52 @@
 
         const stanceLabels = {
             'swarm': 'ORBITAL SWARM',
-            'strike': 'HYPERDRIVE STRIKE',
+            'strike': 'WAN JIAN STRIKE',
             'drill': 'LASER DRILL',
+            'halo': 'BLADE HALO DISC',
             'vortex': 'DUAL VORTEX',
             'drift': 'HARMONIC DRIFT'
         };
 
+        window.setCameraView = function(view, el) {
+            if (!cameraPresets[view]) return;
+            currentView = view;
+            targetCameraPos.copy(cameraPresets[view]);
+            cameraRadius = targetCameraPos.length();
+            cameraTheta = Math.atan2(targetCameraPos.x, targetCameraPos.z);
+            cameraPhi = Math.acos(Math.max(-1, Math.min(1, targetCameraPos.y / cameraRadius)));
+
+            document.querySelectorAll('.btn-view').forEach(b => b.classList.remove('active'));
+            if (el) {
+                el.classList.add('active');
+            } else {
+                document.querySelectorAll('.btn-view').forEach(b => {
+                    if (b.getAttribute('onclick') && b.getAttribute('onclick').includes(view)) {
+                        b.classList.add('active');
+                    }
+                });
+            }
+
+            const teleView = document.getElementById('tele-view');
+            if (teleView) {
+                teleView.innerText = view === 'side' ? 'SIDE VIEW' : view === 'isometric' ? '3/4 ISOMETRIC' : view === 'top' ? 'TOP DOWN' : 'FRONT';
+            }
+        };
+
         window.setStance = function(stance) {
             manualOverride = true;
-            currentStance = stance;
+            if (currentStance !== stance) {
+                currentStance = stance;
+                for (let i = 0; i < MAX_BLADES; i++) {
+                    bladeData[i].prevTarget.copy(bladeData[i].pos);
+                    bladeData[i].morphT = 0.0;
+                }
+                soundEngine.playClash();
+            }
             teleMode.innerText = stanceLabels[stance] || stance.toUpperCase();
 
             document.querySelectorAll('.btn-formation').forEach(btn => {
-                btn.classList.toggle('active', btn.getAttribute('onclick').includes(stance));
+                btn.classList.toggle('active', btn.getAttribute('onclick') && btn.getAttribute('onclick').includes(stance));
             });
 
             clearTimeout(manualTimer);
@@ -871,7 +1086,7 @@
             speedMultiplier = spd;
             teleSpeed.innerText = `${spd.toFixed(1)}X`;
             document.querySelectorAll('.btn-pill').forEach(b => {
-                if (b.innerText.includes('STEADY') || b.innerText.includes('RAPID') || b.innerText.includes('HYPER')) {
+                if (b.innerText.includes('CINEMATIC') || b.innerText.includes('MAJESTIC') || b.innerText.includes('RAPID')) {
                     b.classList.remove('active');
                 }
             });
@@ -910,7 +1125,27 @@
             }
         };
 
-        // Mouse Controls & Parallax
+        // Prevent right-click context menu so Right-Click drags orbit seamlessly
+        window.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+        });
+
+        // Mouse Controls: Left Click = Strike Attack, Right Click / Drag = 3D Orbit
+        window.addEventListener('mousedown', (e) => {
+            if (e.target.closest('#tactical-panel') || e.target.closest('#vision-pip') || e.target.closest('#top-bar')) return;
+
+            if (e.button === 2 || e.shiftKey) {
+                isOrbiting = true;
+                lastMousePos.x = e.clientX;
+                lastMousePos.y = e.clientY;
+            } else if (e.button === 0) {
+                mouse.isDown = true;
+                manualOverride = true;
+                currentStance = 'strike';
+                teleMode.innerText = stanceLabels['strike'];
+            }
+        });
+
         window.addEventListener('mousemove', (e) => {
             mouse.x = (e.clientX / window.innerWidth - 0.5) * 44;
             mouse.y = -(e.clientY / window.innerHeight - 0.5) * 30;
@@ -918,25 +1153,34 @@
             reticle.style.left = `${e.clientX}px`;
             reticle.style.top = `${e.clientY}px`;
 
-            // Camera subtle parallax
-            camera.position.x = mouse.x * 0.08;
-            camera.position.y = mouse.y * 0.08;
+            if (isOrbiting) {
+                const dx = e.clientX - lastMousePos.x;
+                const dy = e.clientY - lastMousePos.y;
+                lastMousePos.x = e.clientX;
+                lastMousePos.y = e.clientY;
 
-            if (!handState.active && !manualOverride && !mouse.isDown) {
+                cameraTheta -= dx * 0.007;
+                cameraPhi = Math.max(0.12, Math.min(Math.PI - 0.12, cameraPhi - dy * 0.007));
+
+                targetCameraPos.x = cameraRadius * Math.sin(cameraPhi) * Math.sin(cameraTheta);
+                targetCameraPos.y = cameraRadius * Math.cos(cameraPhi);
+                targetCameraPos.z = cameraRadius * Math.sin(cameraPhi) * Math.cos(cameraTheta);
+
+                const teleView = document.getElementById('tele-view');
+                if (teleView) teleView.innerText = 'ORBIT 360°';
+                document.querySelectorAll('.btn-view').forEach(b => b.classList.remove('active'));
+            }
+
+            if (!handState.active && !manualOverride && !mouse.isDown && !isOrbiting) {
                 currentStance = 'swarm';
                 teleMode.innerText = stanceLabels['swarm'];
             }
         });
 
-        window.addEventListener('mousedown', (e) => {
-            if (e.target.closest('#tactical-panel') || e.target.closest('#vision-pip') || e.target.closest('#top-bar')) return;
-            mouse.isDown = true;
-            manualOverride = true;
-            currentStance = 'strike';
-            teleMode.innerText = stanceLabels['strike'];
-        });
-
-        window.addEventListener('mouseup', () => {
+        window.addEventListener('mouseup', (e) => {
+            if (e.button === 2 || e.shiftKey) {
+                isOrbiting = false;
+            }
             if (mouse.isDown) {
                 mouse.isDown = false;
                 currentStance = handState.active ? handState.stance : 'swarm';
@@ -944,6 +1188,13 @@
                 setTimeout(() => { manualOverride = false; }, 3000);
             }
         });
+
+        // Mouse Wheel Zoom
+        window.addEventListener('wheel', (e) => {
+            if (e.target.closest('#tactical-panel')) return;
+            cameraRadius = Math.max(16, Math.min(85, cameraRadius + e.deltaY * 0.035));
+            targetCameraPos.normalize().multiplyScalar(cameraRadius);
+        }, { passive: true });
 
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
@@ -971,6 +1222,12 @@
             const tips = [8, 12, 16, 20];
             const pips = [6, 10, 14, 18];
 
+            // 1. Pinch Detection (Thumb Tip 4 to Index Tip 8) -> Blade Halo Disc
+            const dThumbIndex = Math.hypot(landmarks[4].x - landmarks[8].x, landmarks[4].y - landmarks[8].y);
+            if (dThumbIndex < 0.055) {
+                return 'halo';
+            }
+
             let curledCount = 0;
             for (let i = 0; i < 4; i++) {
                 const dTip = Math.hypot(landmarks[tips[i]].x - wrist.x, landmarks[tips[i]].y - wrist.y);
@@ -992,8 +1249,13 @@
             const isRingCurled = dRingTip < dRingPip * 1.05;
             const isPinkyCurled = dPinkyTip < dPinkyPip * 1.05;
 
+            // 2. Taoist Sword Finger (Index & Middle extended, Ring & Pinky curled) -> Laser Drill
             if (isIndexExt && isMiddleExt && isRingCurled && isPinkyCurled) return 'drill';
+
+            // 3. Clenched Fist -> Wan Jian Gui Zong Strike
             if (curledCount >= 3) return 'strike';
+
+            // 4. Open Palm -> Celestial Orbital Swarm Shield
             return 'swarm';
         }
 
@@ -1017,6 +1279,9 @@
             });
         }
 
+        let prevHandPosForAudio = new THREE.Vector3();
+        let prevAudioTime = performance.now();
+
         try {
             const hands = new Hands({
                 locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
@@ -1039,9 +1304,41 @@
                     teleVision.innerText = 'LOCKED';
 
                     const lm1 = results.multiHandLandmarks[0];
-                    const palm1 = lm1[9];
-                    handState.pos1.set((0.5 - palm1.x) * 44, -(palm1.y - 0.5) * 30, 0);
-                    pipCoords.innerText = `X:${handState.pos1.x.toFixed(1)} Y:${handState.pos1.y.toFixed(1)}`;
+                    const wrist = lm1[0];
+                    const middleMCP = lm1[9];
+                    const indexMCP = lm1[5];
+                    const pinkyMCP = lm1[17];
+
+                    // Normalized screen coordinates (-0.5 to 0.5)
+                    handState.screenX = (0.5 - middleMCP.x);
+                    handState.screenY = -(middleMCP.y - 0.5);
+
+                    handState.pos1.set(handState.screenX * 44, handState.screenY * 30, 0);
+
+                    // Update procedural audio whoosh velocity
+                    const nowAudio = performance.now();
+                    const dt = Math.max(0.016, (nowAudio - prevAudioTime) * 0.001);
+                    const handSpeed = handState.pos1.distanceTo(prevHandPosForAudio) / dt;
+                    soundEngine.updateVelocity(handSpeed);
+                    prevHandPosForAudio.copy(handState.pos1);
+                    prevAudioTime = nowAudio;
+
+                    // 1. Hand Roll (wrist tilt in screen plane)
+                    const dx = middleMCP.x - wrist.x;
+                    const dy = middleMCP.y - wrist.y;
+                    handState.roll = -Math.atan2(dx, -dy);
+
+                    // 2. Hand Pitch (wrist-to-finger tilt up/down)
+                    const dVertical = -(middleMCP.y - wrist.y + 0.32);
+                    const zDiff = (middleMCP.z || 0) * 2.5;
+                    handState.pitch = Math.max(-1.1, Math.min(1.1, dVertical * 1.8 + zDiff));
+
+                    // 3. Hand Yaw (knuckle swivel left/right)
+                    const knucklez = ((pinkyMCP.z || 0) - (indexMCP.z || 0)) * 3.2;
+                    handState.yaw = Math.max(-1.2, Math.min(1.2, knucklez - (dx * 1.5)));
+
+                    const rotDeg = Math.round(handState.roll * 180 / Math.PI);
+                    pipCoords.innerText = `X:${handState.pos1.x.toFixed(1)} Y:${handState.pos1.y.toFixed(1)} ROT:${rotDeg}°`;
 
                     if (handState.count >= 2) {
                         const lm2 = results.multiHandLandmarks[1];
@@ -1053,7 +1350,14 @@
                     }
 
                     if (!manualOverride) {
-                        currentStance = handState.stance;
+                        if (currentStance !== handState.stance) {
+                            currentStance = handState.stance;
+                            for (let i = 0; i < MAX_BLADES; i++) {
+                                bladeData[i].prevTarget.copy(bladeData[i].pos);
+                                bladeData[i].morphT = 0.0;
+                            }
+                            soundEngine.playClash();
+                        }
                         teleMode.innerText = stanceLabels[currentStance];
                     }
                 } else {
@@ -1103,27 +1407,72 @@
 
             const time = now * 0.001 * speedMultiplier;
 
-            // Target Focal Beacon Point
-            const focalPoint = new THREE.Vector3();
+            // 1. Smooth Camera Interpolation to Target Preset / Orbit Angle
+            camera.position.lerp(targetCameraPos, 0.06);
+            camera.lookAt(0, 0, 0);
+
+            // 2. 3D Formation World Position & 3D Attitude from Hand Tracking or Mouse
+            const targetFormationPos = new THREE.Vector3();
+            let targetRotPitch = 0;
+            let targetRotYaw = 0;
+            let targetRotRoll = 0;
+
             if (handState.active) {
-                focalPoint.copy(handState.pos1);
+                // Move formation on the screen plane of current camera view
+                const screenOffset = new THREE.Vector3(
+                    handState.screenX * 36,
+                    handState.screenY * 26,
+                    0
+                ).applyQuaternion(camera.quaternion);
+                targetFormationPos.copy(screenOffset);
+
+                if (handState.count >= 2) {
+                    const dHx = handState.pos2.x - handState.pos1.x;
+                    const dHy = handState.pos2.y - handState.pos1.y;
+                    targetRotRoll = Math.atan2(dHy, dHx);
+                    targetRotPitch = (handState.pos1.y + handState.pos2.y) * 0.02;
+                    targetRotYaw = (handState.pos1.x + handState.pos2.x) * 0.02;
+                } else {
+                    targetRotRoll = handState.roll;
+                    targetRotPitch = handState.pitch;
+                    targetRotYaw = handState.yaw;
+                }
             } else {
-                focalPoint.set(mouse.x, mouse.y, 0);
+                // Mouse control position
+                const mouseOffset = new THREE.Vector3(
+                    mouse.x * 0.45,
+                    mouse.y * 0.45,
+                    0
+                ).applyQuaternion(camera.quaternion);
+                targetFormationPos.copy(mouseOffset);
+
+                // Idle floating orientation
+                targetRotRoll = Math.sin(time * 0.45) * 0.05;
+                targetRotPitch = Math.cos(time * 0.35) * 0.04;
+                targetRotYaw = 0;
             }
 
-            // Beacon Orb
-            beaconMesh.position.lerp(focalPoint, 0.18 * speedMultiplier);
-            beaconLight.position.copy(beaconMesh.position);
+            formationGroup.position.lerp(targetFormationPos, 0.10 * speedMultiplier);
+
+            // Quaternion rotation aligned to camera view plane
+            const qScreen = new THREE.Quaternion().setFromEuler(new THREE.Euler(
+                targetRotPitch,
+                targetRotYaw,
+                targetRotRoll,
+                'YXZ'
+            ));
+            const targetFormationQuat = camera.quaternion.clone().multiply(qScreen);
+            formationGroup.quaternion.slerp(targetFormationQuat, 0.10);
+
+            // Beacon Orb centered in formationGroup
+            beaconMesh.position.set(0, 0, 0);
+            beaconLight.position.set(0, 0, 0);
             beaconLight.intensity = (currentStance === 'strike' ? 7.5 : 4.5) + Math.sin(time * 6) * 1.5;
             beaconMesh.scale.setScalar(1 + Math.sin(time * 5) * 0.18);
 
             embers.rotation.y = time * 0.015;
 
-            // High-Speed Physics Parameters (Responsive & Kinetic)
-            const springK = ((currentStance === 'strike') ? 0.20 : (currentStance === 'drill') ? 0.16 : 0.09) * Math.min(speedMultiplier, 2.5);
-            const damping = (currentStance === 'strike') ? 0.86 : 0.88;
-
-            // Update All 1,000+ Valyrian Swords
+            // Update All 1,000+ Valyrian Swords with Boid Flocking & Liquid-Metal Morphing
             for (let i = 0; i < MAX_BLADES; i++) {
                 const b = bladeData[i];
 
@@ -1146,7 +1495,6 @@
                 if (currentStance === 'swarm') {
                     // =========================================================
                     // 01 // ORBITAL SWARM: 4 CONCENTRIC PLANETARY RINGS
-                    // (Blades fly at supersonic speed along orbital tangents)
                     // =========================================================
                     const tier = b.ringTier;
                     const r = b.ringRadius;
@@ -1154,13 +1502,9 @@
                     const speed = b.ringSpeed;
                     const theta = (i / (activeBladeCount / 4)) * Math.PI * 2 + time * speed;
 
-                    const ringX = Math.cos(theta) * r;
-                    const ringY = Math.sin(theta) * r * Math.cos(tilt);
-                    const ringZ = Math.sin(theta) * r * Math.sin(tilt);
-
-                    target.x = focalPoint.x + ringX;
-                    target.y = focalPoint.y + ringY;
-                    target.z = focalPoint.z + ringZ;
+                    target.x = Math.cos(theta) * r;
+                    target.y = Math.sin(theta) * r * Math.cos(tilt);
+                    target.z = Math.sin(theta) * r * Math.sin(tilt);
 
                     tangent.x = -Math.sin(theta);
                     tangent.y = Math.cos(theta) * Math.cos(tilt);
@@ -1168,49 +1512,59 @@
 
                 } else if (currentStance === 'strike') {
                     // =========================================================
-                    // 02 // HYPERDRIVE STRIKE: MULTI-LAYERED RAILGUN SPEARHEAD
-                    // (1,000 blades thrust forward at supersonic acceleration)
+                    // 02 // WAN JIAN GUI ZONG: MULTI-TIERED CONVERGENCE RAILGUN
                     // =========================================================
                     const layer = i % 24;
-                    const angle = (i / 24) * 0.95 + time * 4.5;
+                    const angle = (i / 24) * 0.95 + time * 1.2;
                     const radius = 0.8 + layer * 0.42;
                     const zOffset = (layer * 2.2) - 22;
 
-                    target.x = focalPoint.x + Math.cos(angle) * radius;
-                    target.y = focalPoint.y + Math.sin(angle) * radius;
-                    target.z = focalPoint.z + zOffset;
+                    target.x = Math.cos(angle) * radius;
+                    target.y = Math.sin(angle) * radius;
+                    target.z = zOffset;
 
                     tangent.set(0, 0, 1);
 
                 } else if (currentStance === 'drill') {
                     // =========================================================
-                    // 03 // LASER DRILL: HIGH-RPM TWIN-HELIX SPIRAL TUNNEL
+                    // 03 // TAOIST SWORD FINGER: HIGH-RPM TWIN-HELIX SPIRAL DRILL
                     // =========================================================
                     const drillR = 2.2 + (i % 8) * 0.45;
-                    const drillAngle = time * 18 + (i * 0.12);
+                    const drillAngle = time * 3.5 + (i * 0.12);
                     const drillZ = -25 + (i / activeBladeCount) * 55;
 
-                    target.x = focalPoint.x + Math.cos(drillAngle) * drillR;
-                    target.y = focalPoint.y + Math.sin(drillAngle) * drillR;
+                    target.x = Math.cos(drillAngle) * drillR;
+                    target.y = Math.sin(drillAngle) * drillR;
                     target.z = drillZ;
 
                     tangent.set(0, 0, 1);
 
+                } else if (currentStance === 'halo') {
+                    // =========================================================
+                    // 04 // PINCH GESTURE: HIGH-SPEED BLADE HALO DISC
+                    // =========================================================
+                    const haloAngle = time * 7.5 + (i / activeBladeCount) * Math.PI * 2;
+                    const haloRadius = 2.4 + (i % 14) * 0.45;
+
+                    target.x = Math.cos(haloAngle) * haloRadius;
+                    target.y = Math.sin(haloAngle) * haloRadius;
+                    target.z = Math.sin(time * 5 + i * 0.2) * 0.5;
+
+                    tangent.x = -Math.sin(haloAngle);
+                    tangent.y = Math.cos(haloAngle);
+                    tangent.z = 0;
+
                 } else if (currentStance === 'vortex') {
                     // =========================================================
-                    // 04 // DUAL VORTEX: TWIN YIN-YANG GALAXY ARMS
+                    // 05 // DUAL VORTEX: TWIN YIN-YANG GALAXY ARMS
                     // =========================================================
                     const isArmOne = (i % 2 === 0);
-                    const center = (handState.count >= 2)
-                        ? (isArmOne ? handState.pos1 : handState.pos2)
-                        : focalPoint;
-
-                    const angle = time * (isArmOne ? 3.5 : -3.5) + (i * 0.035);
+                    const angle = time * (isArmOne ? 0.9 : -0.9) + (i * 0.035);
                     const radius = 4.2 + (i % 18) * 0.85;
 
-                    target.x = center.x + Math.cos(angle) * radius;
-                    target.y = center.y + Math.sin(angle) * radius;
-                    target.z = center.z + Math.sin(time * 3 + i) * 3;
+                    target.x = (isArmOne ? 4.5 : -4.5) + Math.cos(angle) * radius;
+                    target.y = Math.sin(angle) * radius;
+                    target.z = Math.sin(time * 1.5 + i) * 3;
 
                     tangent.x = -Math.sin(angle) * (isArmOne ? 1 : -1);
                     tangent.y = Math.cos(angle) * (isArmOne ? 1 : -1);
@@ -1218,46 +1572,67 @@
 
                 } else {
                     // =========================================================
-                    // 05 // HARMONIC DRIFT: CELESTIAL WAVE MATRIX
+                    // 06 // HARMONIC DRIFT: CELESTIAL WAVE MATRIX
                     // =========================================================
                     const cols = 35;
                     const col = i % cols;
                     const row = Math.floor(i / cols);
                     const waveX = (col - (cols / 2)) * 2.2;
                     const waveY = (row - 14) * 1.8;
-                    const waveZ = Math.sin(time * 1.8 + col * 0.32 + row * 0.18) * 8.5;
+                    const waveZ = Math.sin(time * 0.8 + col * 0.32 + row * 0.18) * 8.5;
 
-                    target.x = waveX + Math.sin(time + row) * 2;
-                    target.y = waveY + Math.cos(time + col) * 1.5;
+                    target.x = waveX + Math.sin(time * 0.6 + row) * 2;
+                    target.y = waveY + Math.cos(time * 0.6 + col) * 1.5;
                     target.z = waveZ;
 
                     tangent.set(0, 0.2, 1).normalize();
                 }
 
-                // High-speed spring physics integration
-                vel.x = (vel.x + (target.x - pos.x) * springK) * damping;
-                vel.y = (vel.y + (target.y - pos.y) * springK) * damping;
-                vel.z = (vel.z + (target.z - pos.z) * springK) * damping;
+                // Staggered Liquid-Metal Morphing
+                b.morphT = Math.min(1.0, b.morphT + 0.038);
+                const easeT = b.morphT < 0.5 
+                    ? 4 * b.morphT * b.morphT * b.morphT 
+                    : 1 - Math.pow(-2 * b.morphT + 2, 3) / 2;
 
-                pos.add(vel);
+                const activeTarget = b.prevTarget.clone().lerp(target, easeT);
+                if (easeT < 0.98) {
+                    activeTarget.y += Math.sin(easeT * Math.PI) * (3.5 * (1 - (b.ringTier / 4)));
+                }
+
+                // Boid Flocking & Aerodynamic Velocity Steering
+                const desired = activeTarget.clone().sub(pos);
+                const dist = desired.length();
+                const maxSpeed = (currentStance === 'strike' ? 70 : 45) * speedMultiplier;
+                desired.normalize().multiplyScalar(Math.min(dist * 4.8, maxSpeed));
+
+                const steer = desired.sub(vel);
+                steer.clampLength(0, 24 * speedMultiplier);
+
+                vel.add(steer.multiplyScalar(0.04));
+                vel.multiplyScalar(0.91); // Fluid air resistance
+                pos.add(vel.clone().multiplyScalar(0.04 * 60));
 
                 dummy.position.copy(pos);
 
-                // Flight Orientation & Aerodynamic Banking
+                // Velocity-Aligned Aerodynamic Banking & Orientation
                 if (currentStance === 'swarm') {
                     dummy.lookAt(pos.x + tangent.x * 6, pos.y + tangent.y * 6, pos.z + tangent.z * 6);
                     dummy.rotateZ(0.25);
                 } else if (currentStance === 'strike') {
-                    dummy.lookAt(focalPoint.x, focalPoint.y, focalPoint.z + 32);
+                    dummy.lookAt(0, 0, 35);
+                    dummy.rotateZ((i / 24) * 0.95 + time * 1.2);
                 } else if (currentStance === 'drill') {
-                    dummy.lookAt(focalPoint.x, focalPoint.y, 45);
-                    dummy.rotateZ(time * 20 + i);
+                    dummy.lookAt(0, 0, 45);
+                    dummy.rotateZ(time * 4.0 + i);
+                } else if (currentStance === 'halo') {
+                    dummy.lookAt(pos.x + tangent.x * 6, pos.y + tangent.y * 6, pos.z);
+                    dummy.rotateZ(0.4);
                 } else if (currentStance === 'vortex') {
                     dummy.lookAt(pos.x + tangent.x * 6, pos.y + tangent.y * 6, pos.z);
                     dummy.rotateZ(0.3);
                 } else {
                     dummy.lookAt(pos.x, pos.y + 0.5, pos.z + 6);
-                    dummy.rotateZ(Math.sin(time + i * 0.15) * 0.25);
+                    dummy.rotateZ(Math.sin(time * 0.6 + i * 0.15) * 0.25);
                 }
 
                 dummy.scale.setScalar(b.scale);
