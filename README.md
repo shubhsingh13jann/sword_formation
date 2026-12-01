@@ -103,4 +103,4 @@ Browsers require a secure origin (`localhost` or `https`) to access the webcam v
 * **Audio Synthesis**: Web Audio API (procedural low-frequency Qi drone, velocity noise whoosh, resonant steel clash).
 * **Typography**: Google Fonts (`Rajdhani`, `JetBrains Mono`).
 
-<!-- Milestone verified: 2026-11-30 16:00:00 +0530 -->
+<!-- Milestone verified: 2026-12-01 11:00:00 +0530 -->
